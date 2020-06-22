@@ -138,14 +138,13 @@ public class Download {
 		return null;
 
 	}
-	public void downloadAllFile(LinkedList<String> listFile,String folderPathDownload) throws Exception {
+	public void downloadAllFile(LinkedList<String> listFile,String folderPathDownload,String des) throws Exception {
 		if(listFile.isEmpty()) {
 			System.out.println("There is no file to download, please check again ");
 		}else {
 			for (int i = 0; i < listFile.size(); i++) {
-				System.out.println(folderPathDownload+"/"+listFile.get(i));
-				//Phải kiểm tra xem file đã tồn tại chưa nếu rồi thì không tải xuống nữa -- Làm sau
-				download(folderPathDownload+listFile.get(i),"D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\");
+				//Phải kiểm tra xem file đã tồn tại chưa nếu rồi thì không tải xuống nữa -- Nhớ làm sau !
+				download(folderPathDownload+"/"+listFile.get(i),des);
 				
 			}
 			
@@ -153,10 +152,11 @@ public class Download {
 	}
 
 	public static void main(String[] args) throws Exception {
+		String desSaveFiles = "D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\";
 		Download dw = new Download("http://drive.ecepvn.org:5000");
 		dw.login("guest_access", "123456");
 		
-		dw.downloadAllFile(dw.listFiles(dw.getFolderPath()),dw.getFolderPath());
+		dw.downloadAllFile(dw.listFiles(dw.getFolderPath()),dw.getFolderPath(),desSaveFiles);
 
 //		dw.listFiles("/ECEP/song.nguyen/DW_2020/data");
 //		dw.download("/ECEP/song.nguyen/DW_2020/data/SinhVien.txt", "D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\");
