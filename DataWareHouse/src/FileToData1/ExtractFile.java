@@ -1,4 +1,4 @@
-package FileToData;
+package FileToData1;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -12,11 +12,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class ExtractFile {
-	String url_1 = "jdbc:mysql://localhost/data?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
+	String url_1 = "jdbc:mysql://localhost/download?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	String userName_1 = "root";
 	String passWord_1 = "";
 
-	String url_2 = "jdbc:mysql://localhost/datacopy?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
+	String url_2 = "jdbc:mysql://localhost/dcopy?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	String userName_2 = "root";
 	String passWord_2 = "";
 
@@ -36,7 +36,7 @@ public class ExtractFile {
 		System.out.println(fields.length);
 		System.out.println(lineText);
 		// create table
-		sql = "CREATE table data(" + fields[0] + " CHAR(50)," + fields[1] + " CHAR(50)," + fields[2]
+		sql = "CREATE table tao(" + fields[0] + " CHAR(50)," + fields[1] + " CHAR(50)," + fields[2]
 				+ " CHAR(50)," + fields[3] + " CHAR(50)," + fields[4] + " CHAR(50)," + fields[5] + " CHAR(50)," + fields[6] + " CHAR(50))";
 		System.out.println(sql);
 		PreparedStatement preparedStatement = connect.prepareStatement(sql);
@@ -45,7 +45,7 @@ public class ExtractFile {
 		
 
 		// skip header line
-		String query = "INSERT INTO data VALUES(?, ?, ?, ?, ?, ?,?)";
+		String query = "INSERT INTO tao VALUES(?, ?, ?, ?, ?, ?,?)";
 		PreparedStatement pre = connect.prepareStatement(query);
 		while ((lineText = lineReader.readLine()) != null) {
 			String[] data = lineText.split("\t");
@@ -77,7 +77,11 @@ public class ExtractFile {
 
 		ResultSet rs;
 		Statement stmt = connectionDB1.createStatement();
-		rs = stmt.executeQuery("SELECT * FROM data");
+		rs = stmt.executeQuery("SELECT * FROM tao");
+		
+		while (rs.next()) {
+            System.out.println(rs.getString(1) + "  " + rs.getString(2) );
+        }
 		ResultSetMetaData md = (ResultSetMetaData) rs.getMetaData();
 		int counter = md.getColumnCount();
 		String colName[] = new String[counter];
@@ -109,8 +113,8 @@ public class ExtractFile {
 
 	public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
 		ExtractFile ex = new ExtractFile();
-		String urlFile = "E:\\AI\\DataWareHouse\\src\\FileToData\\thongtincanhan.txt";
-//		ex.load(urlFile);
-		ex.copy("data", "datacopy", "data");
+		String urlFile = "F:\\DataWareHouse\\DataWareHouse\\src\\FileToData1\\thongtincanhan.txt";
+		ex.load(urlFile);
+//		ex.copy("tao", "dcopy", "tao");
 	}
 }
