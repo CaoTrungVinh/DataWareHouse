@@ -44,12 +44,17 @@ public class Download {
 	static String url_mysql = "jdbc:mysql://localhost/download?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	static String userName_mysql = "root";
 	static String passWord_mysql = "";
+	
+	long millis=System.currentTimeMillis();  
+	java.sql.Date date=new java.sql.Date(millis);    
 
 	public Download(String url) throws SQLException {
 		this.url = url;
 		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
-		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
-		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
+//		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
+//		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
+		this.noticeLogin = new StringBuffer("[THÔNG BÁO] Xin chào mấy bạn quần què");
+		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] Xin chào mấy bạn quần què");
 		this.mail = new SendMailSSL();
 		loadProps();
 	}
@@ -255,14 +260,11 @@ public class Download {
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
 				
-				String query = "INSERT INTO logs VALUES(?,?,?,?)";
+				String query = "INSERT INTO logs(time_download, status) VALUES(?,?)";
 				PreparedStatement pre = connectionDB1.prepareStatement(query);
-				long millis=System.currentTimeMillis();  
-				java.sql.Date date=new java.sql.Date(millis);    
+				
 				pre.setDate(1, date);
-				pre.setDate(2, date);
-				pre.setDate(3, date);
-				pre.setString(4, "OK");
+				pre.setString(2, "OK");
 				pre.execute();
 				System.out.println("OKE");
 			}
@@ -290,12 +292,12 @@ public class Download {
 //		Download dw = new Download("/ECEP/song.nguyen/DW_2020/");
 		Download dw = new Download("http://drive.ecepvn.org:5000/");
 		dw.login();
+		dw.getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", dw.getNotice().toString());
 		dw.down();
-//		dw.getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", dw.getNotice().toString());
+		dw.getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", dw.getNoticeDownLoad().toString());
 
 //		dw.downloadAllFile(dw.listFiles(), listFile);
 		
-//		dw.getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", dw.getNoticeDownLoad().toString());
 
 //		dw.download("/ECEP/song.nguyen/DW_2020/data/SinhVien.txt", "D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\");
 	}
