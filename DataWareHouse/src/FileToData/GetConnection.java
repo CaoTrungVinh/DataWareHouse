@@ -9,13 +9,13 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class GetConnection {
-	String driver = null;
-	String url = null;
-	String user = null;
-	String pass = null;
-	String databasebName = null;
+	static String driver = null;
+	static String url = null;
+	static String user = null;
+	static String pass = null;
+	static String databasebName = null;
 
-	public Connection getConnection(String location) {
+	public static Connection getConnection(String location) {
 		String link = "config.properties";
 		Connection result = null;
 		
@@ -82,9 +82,10 @@ public class GetConnection {
 // HƯỚNG DẪN SỬ DỤNG TRƯỚC KHI DÙNG
 	public static void main(String[] args) {
 		
-		Connection conn = new GetConnection().getConnection("hihi");
+		Connection conn = new GetConnection().getConnection("control");
 		if (conn != null) {
 			System.out.println("Thanh cong");
 		}
 	}
+
 }
