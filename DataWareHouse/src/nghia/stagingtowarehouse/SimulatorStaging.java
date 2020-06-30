@@ -25,64 +25,9 @@ import model.MyConfig;
 public class SimulatorStaging {
 
 	public static void main(String[] args) throws Exception {
+		// Tạo bảng và insert dữ liệu vào staging
 		createAndInsert();
-//		File file = new File("D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\sinhvien_sang_nhom4.xlsx");
-//		System.out.println(file.isFile());
-//		File myFile = new File("D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\sinhvien_sang_nhom2.xlsx");
-//		FileInputStream fis = new FileInputStream(myFile);
-//
-//		// Finds the workbook instance for XLSX file
-//		GetConnection getConnection = new GetConnection();
-//		Connection connection = getConnection.getConnection("staging");
-//		XSSFWorkbook myWorkBook = new XSSFWorkbook(fis);
-//		FormulaEvaluator eval = myWorkBook.getCreationHelper().createFormulaEvaluator();
-////		FormulaEvaluator eval = 8.getCreationHelper().createFormulaEvaluator();
-//		
-//		// Return first sheet from the XLSX workbook
-//		XSSFSheet mySheet = myWorkBook.getSheetAt(0);
-//		// Get iterator to all the rows in current sheet
-//		Iterator<Row> rowIterator = mySheet.iterator();
-//		//count dùng để check dòng đầu thì bỏ qua không lấy
-//		int count = 0;
-//		DataFormatter formatter = new DataFormatter();
-//		// Traversing over each row of XLSX file
-//		while (rowIterator.hasNext()) {
-//			Row row = rowIterator.next();
-//			if (count == 0) {
-//				count++;
-//				continue;
-//			}
-//		// For each row, iterate through each columns
-//		Iterator<Cell> cellIterator = row.cellIterator();
-//		String sqlInsert = "INSERT INTO nhom_2 VALUES(";
-//		int countColumn =0;
-//		while (cellIterator.hasNext()) {
-//			Cell cell = cellIterator.next();
-//			if(countColumn==Integer.parseInt("11")-1) {
-//				sqlInsert+= "'"+getCellValue(cell, eval)+"')";
-//				countColumn++;
-//
-//			}else {
-//				sqlInsert+= "'"+getCellValue(cell, eval)+"',";
-//				countColumn++;
-//			}
-//			
-////			System.out.print(getCellValue(cell,eval)+"\t");
-//		}
-//		if(countColumn<Integer.parseInt("11")) {
-//			for (int i = 0; i < (Integer.parseInt("11")-countColumn); i++) {
-//				if(i==(Integer.parseInt("11")-countColumn)-1) {
-//					sqlInsert+="null);";
-//				}else {
-//					sqlInsert+="null,";
-//				}
-//				
-//			}
-//			insertValuesIntoTable(connection, sqlInsert);
-//		}
-//		System.out.println(sqlInsert);
-////
-//		}
+
 
 	}
 
