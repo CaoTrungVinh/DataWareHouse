@@ -124,7 +124,6 @@ public class SimulatorStaging {
 					sqlInsert += "'" + getCellValue(cell, eval) + "',";
 					countColumn++;
 				}
-//				System.out.print(getCellValue(cell,eval)+"\t");
 
 			}
 			int misValues = Integer.parseInt(myConfig.getNumber_cols()) - countColumn;
@@ -293,7 +292,7 @@ public class SimulatorStaging {
 		// lay du lieu tu bang config
 		try {
 			statement = conConfig.prepareStatement(
-					"Select id,staging_table,variabless,file_name,number_cols,query_insert_datawarehouse from config");
+					"Select id,staging_table,variabless,file_name,number_cols from config");
 			res = statement.executeQuery();
 			while (res.next()) {
 				MyConfig config = new MyConfig();
@@ -302,7 +301,6 @@ public class SimulatorStaging {
 				config.setStaging_table(res.getString("staging_table"));
 				config.setVariabless(res.getString("variabless"));
 				config.setNumber_cols(res.getString("number_cols"));
-				config.setQuery_insert_datawarehouse(res.getString("query_insert_datawarehouse"));
 				listConfig.add(config);
 			}
 		} catch (SQLException e) {
