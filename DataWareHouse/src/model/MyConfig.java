@@ -15,7 +15,7 @@ public class MyConfig {
 	private String staging_table;
 	private String variabless;
 	private String number_cols;
-	private String query_insert_datawarehouse;
+	private String datawarehouse_table;
 	
 	
 	
@@ -30,7 +30,7 @@ public class MyConfig {
 	public MyConfig(int id, String source_host, String user_name, String password, String list_file,
 			String folder_download, String error_dir, String success_dir, String extension_file, String file_name,
 			String delimiter, String staging_table, String variabless, String number_cols,
-			String query_insert_datawarehouse) {
+			String datawarehouse) {
 		super();
 		this.id = id;
 		this.source_host = source_host;
@@ -46,7 +46,19 @@ public class MyConfig {
 		this.staging_table = staging_table;
 		this.variabless = variabless;
 		this.number_cols = number_cols;
-		this.query_insert_datawarehouse = query_insert_datawarehouse;
+		this.datawarehouse_table = datawarehouse;
+	}
+
+
+
+
+	public String getDatawarehouse_table() {
+		return datawarehouse_table;
+	}
+
+
+	public void setDatawarehouse_table(String datawarehouse_table) {
+		this.datawarehouse_table = datawarehouse_table;
 	}
 
 
@@ -247,18 +259,6 @@ public class MyConfig {
 
 
 
-
-	public String getQuery_insert_datawarehouse() {
-		return query_insert_datawarehouse;
-	}
-
-
-
-
-	public void setQuery_insert_datawarehouse(String query_insert_datawarehouse) {
-		this.query_insert_datawarehouse = query_insert_datawarehouse;
-	}
-	
 	
 	
 	
