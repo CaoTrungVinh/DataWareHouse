@@ -6,14 +6,6 @@
 	<classpathentry kind="lib" path="mysql-connector-java-8.0.15.jar"/>
 	<classpathentry kind="lib" path="javax.mail.jar"/>
 	<classpathentry kind="lib" path="activation-2.2.1.jar"/>
-	<classpathentry kind="lib" path="poi-4.1.2.jar"/>
-	<classpathentry kind="lib" path="commons-codec-1.13.jar"/>
-	<classpathentry kind="lib" path="commons-collections4-4.4.jar"/>
-	<classpathentry kind="lib" path="commons-math3-3.6.1.jar"/>
-	<classpathentry kind="lib" path="poi-ooxml-4.1.2.jar"/>
-	<classpathentry kind="lib" path="poi-ooxml-schemas-4.1.2.jar"/>
-	<classpathentry kind="lib" path="xmlbeans-3.1.0.jar"/>
-	<classpathentry kind="lib" path="commons-compress-1.19.jar"/>
 	<classpathentry kind="lib" path="api_ecxel/commons-codec-1.13.jar"/>
 	<classpathentry kind="lib" path="api_ecxel/commons-collections4-4.4.jar"/>
 	<classpathentry kind="lib" path="api_ecxel/commons-compress-1.19.jar"/>
