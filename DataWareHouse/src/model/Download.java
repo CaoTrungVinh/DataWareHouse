@@ -40,21 +40,20 @@ public class Download {
 	static String listFile;
 	static String folder_download;
 	static String kieuFile;
+	static String fileName;
 
-	static String url_mysql = "jdbc:mysql://localhost/download?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
+	static String url_mysql = "jdbc:mysql://localhost/control?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	static String userName_mysql = "root";
 	static String passWord_mysql = "";
 	
 	long millis=System.currentTimeMillis();  
-	java.sql.Date date=new java.sql.Date(millis);    
-
+	java.sql.Date date=new java.sql.Date(millis); 
+	
 	public Download(String url) throws SQLException {
 		this.url = url;
 		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
-//		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
-//		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
-		this.noticeLogin = new StringBuffer("[THÔNG BÁO] Xin chào mấy bạn quần què");
-		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] Xin chào mấy bạn quần què");
+		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
+		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
 		this.mail = new SendMailSSL();
 		loadProps();
 	}
@@ -76,14 +75,15 @@ public class Download {
 			System.out.println(username + " " + password);
 
 			while (rs.next()) {
-				url = rs.getString(2);
-				username = rs.getString(3);
-				password = rs.getString(4);
-				listFile = rs.getString(5);
-				folder_download = rs.getString(6);
-				kieuFile = rs.getString(7);
+				url = rs.getString("source_host");
+				username = rs.getString("user_name");
+				password = rs.getString("password");
+				listFile = rs.getString("list_file");
+				folder_download = rs.getString("folder_download");
+				kieuFile = rs.getString("extension_file");
+				fileName = rs.getString("file_name");
 			}
-			System.out.println(url + " " +username + " " + password + " " + listFile + " " + folder_download + " " + kieuFile );
+			System.out.println(url + " " +username + " " + password + " " + listFile + " " + folder_download + " " + kieuFile + " " + fileName );
 
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
@@ -166,7 +166,7 @@ public class Download {
 		if (sid != null) {
 
 			URL urlForGetRequest = new URL(url + "/webapi/entry.cgi?api=SYNO.FileStation.List&version=1&method=list"
-					+ "&folder_path=" + listFile + "&_sid=" + sid);
+					+ "&folder_path=" + listFile  + "&_sid=" + sid);
 			HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
 			conection.setRequestMethod("GET");
 			int responseCode = conection.getResponseCode();
@@ -197,8 +197,10 @@ public class Download {
 		return result;
 	}
 
-	public String download(String src, String des) throws Exception {
+	
+	public String downloadFile() throws Exception {
 		if (sid != null) {
+			String src = listFile + "/" + fileName;
 			URL urlForGetRequest = new URL(
 					url + "/webapi/entry.cgi?api=SYNO.FileStation.Download&version=1&method=download&mode=open"
 							+ "&path=" + src + "&_sid=" + sid);
@@ -208,7 +210,7 @@ public class Download {
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				InputStream in = new BufferedInputStream((conection.getInputStream()));
 				String line = null;
-				String fileDes = des + src.substring(src.lastIndexOf("/") + 1);
+				String fileDes = folder_download + src.substring(src.lastIndexOf("/") + 1);
 				System.out.println(fileDes);
 //				PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(fileDes)));
 				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileDes));
@@ -219,6 +221,17 @@ public class Download {
 				}
 				in.close();
 				out.close();
+				System.out.println("down file thanh cong");
+				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
+				System.out.println("");
+				
+				String query = "INSERT INTO logs(time_download, status) VALUES(?,?)";
+				PreparedStatement pre = connectionDB1.prepareStatement(query);
+				
+				pre.setDate(1, date);
+				pre.setString(2, "OK");
+				pre.execute();
+				System.out.println("OKE");
 				return fileDes;
 			} else {
 				return null;
@@ -228,7 +241,7 @@ public class Download {
 		return null;
 	}
 
-	public void down() throws Exception {
+	public void download() throws Exception {
 //		File desFlie = new File(des);
 		LinkedList<String> lisFile = listFiles();
 		for (int i = 0; i < lisFile.size(); i++) {
@@ -280,8 +293,8 @@ public class Download {
 			for (int i = 0; i < listFile.size(); i++) {
 				// Phải kiểm tra xem file đã tồn tại chưa nếu rồi thì không tải xuống nữa -- Nhớ
 				// làm sau !
-				download(folderPathDownload + "/" + listFile.get(i), folder_download);
-				noticeDownLoad.append(listFile.get(i) + " \n");
+//				downloadFile(folderPathDownload + "/" + listFile.get(i));
+//				noticeDownLoad.append(listFile.get(i) + " \n");
 
 			}
 
@@ -292,13 +305,14 @@ public class Download {
 //		Download dw = new Download("/ECEP/song.nguyen/DW_2020/");
 		Download dw = new Download("http://drive.ecepvn.org:5000/");
 		dw.login();
-		dw.getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", dw.getNotice().toString());
-		dw.down();
-		dw.getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", dw.getNoticeDownLoad().toString());
+//		dw.getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", dw.getNotice().toString());
+//		dw.download();
+		dw.downloadFile();
+		
+//		dw.getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", dw.getNoticeDownLoad().toString());
 
 //		dw.downloadAllFile(dw.listFiles(), listFile);
 		
 
-//		dw.download("/ECEP/song.nguyen/DW_2020/data/SinhVien.txt", "D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\");
 	}
 }
