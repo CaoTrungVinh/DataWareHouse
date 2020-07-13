@@ -306,8 +306,8 @@ public class Download {
 		Download dw = new Download("http://drive.ecepvn.org:5000/");
 		dw.login();
 //		dw.getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", dw.getNotice().toString());
-//		dw.download();
-		dw.downloadFile();
+		dw.download();
+//		dw.downloadFile();
 		
 //		dw.getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", dw.getNoticeDownLoad().toString());
 

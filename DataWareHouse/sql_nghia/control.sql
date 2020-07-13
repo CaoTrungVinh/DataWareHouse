@@ -11,7 +11,7 @@
  Target Server Version : 100134
  File Encoding         : 65001
 
- Date: 03/07/2020 20:06:04
+ Date: 13/07/2020 15:51:45
 */
 
 SET NAMES utf8mb4;
@@ -41,6 +41,11 @@ CREATE TABLE `config`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
+-- Records of config
+-- ----------------------------
+INSERT INTO `config` VALUES (0, 'http://drive.ecepvn.org:5000/', 'guest_access', '123456', '/ECEP/song.nguyen/DW_2020/data', 'E:\\Desktop\\New folder\\DataWareHouse\\DataWareHouse\\ListFileDownload\\', '', NULL, 'xlsx', '17130016_sang_nhom12.xlsx', NULL, NULL, NULL, NULL, NULL);
+
+-- ----------------------------
 -- Table structure for logs
 -- ----------------------------
 DROP TABLE IF EXISTS `logs`;
@@ -55,6 +60,6 @@ CREATE TABLE `logs`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `id_config`(`id_config`) USING BTREE,
   CONSTRAINT `logs_ibfk_1` FOREIGN KEY (`id_config`) REFERENCES `config` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8 COLLATE = utf8_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 155 CHARACTER SET = utf8 COLLATE = utf8_unicode_ci ROW_FORMAT = Compact;
 
 SET FOREIGN_KEY_CHECKS = 1;
