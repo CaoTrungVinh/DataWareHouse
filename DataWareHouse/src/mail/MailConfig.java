@@ -11,5 +11,5 @@ public class MailConfig {
 	 
 	    public static final String APP_PASSWORD = "datawarehousenhom4"; // your password
 	 
-	    public static final String RECEIVE_EMAIL = "caotrungvinh199@gmail.com,17130276@st.hcmuaf.edu.vn"; 
+	    public static final String RECEIVE_EMAIL = "tannghianguyen03@gmail.com"; 
 }

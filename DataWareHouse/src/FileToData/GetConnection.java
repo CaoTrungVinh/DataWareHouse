@@ -16,46 +16,28 @@ public class GetConnection {
 	static String databasebName = null;
 
 	public static Connection getConnection(String location) {
-		String link = "config.properties";
 		Connection result = null;
 		
 		if (location.equalsIgnoreCase("control")) {
-			try (InputStream input = new FileInputStream(link)) {
-				Properties prop = new Properties();
-				prop.load(input);
-				driver = prop.getProperty("driver_local");
-				url = prop.getProperty("url_local");
-				databasebName = prop.getProperty("dbName_control");
-				user = prop.getProperty("user_local");
-				pass = prop.getProperty("pass_local");
-			} catch (IOException ex) {
-				ex.printStackTrace();
+				driver = "com.mysql.jdbc.Driver";
+				url = "jdbc:mysql://localhost:3306/";
+				databasebName = "control";
+				user = "root";
+				pass = "123456";
 			
-		}
+		
 		} else if (location.equalsIgnoreCase("staging")) {
-			try (InputStream input = new FileInputStream(link)) {
-				Properties prop = new Properties();
-				prop.load(input);
-				driver = prop.getProperty("driver_local");
-				url = prop.getProperty("url_local");
-				databasebName = prop.getProperty("dbName_staging");
-				user = prop.getProperty("user_local");
-				pass = prop.getProperty("pass_local");
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
+			driver = "com.mysql.jdbc.Driver";
+			url = "jdbc:mysql://localhost:3306/";
+			databasebName = "staging";
+			user = "root";
+			pass = "123456";
 		} else if (location.equalsIgnoreCase("datawarehouse")) {
-			try (InputStream input = new FileInputStream(link)) {
-				Properties prop = new Properties();
-				prop.load(input);
-				driver = prop.getProperty("driver_local");
-				url = prop.getProperty("url_local");
-				databasebName = prop.getProperty("dName_datawarehouse");
-				user = prop.getProperty("user_local");
-				pass = prop.getProperty("pass_local");
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
+			driver = "com.mysql.jdbc.Driver";
+			url = "jdbc:mysql://localhost:3306/";
+			databasebName = "datawarehouse";
+			user = "root";
+			pass = "123456";
 		} else {
 			System.out.println("Nhap ten database sai !!!");
 

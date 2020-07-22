@@ -17,9 +17,11 @@ import model.MyConfig;
 
 public class DataWarehouse {
 	SendMailSSL sendMail = null;
+	 int id_config = 0;
 
-	public DataWarehouse() {
+	public DataWarehouse(int id_config) {
 		sendMail = new SendMailSSL();
+		this.id_config = id_config;
 	}
 
 	// HÀM RUN
@@ -41,7 +43,10 @@ public class DataWarehouse {
 		} else {
 			// NẾU KẾT NỐI THÀNH CÔNG --> 2.LẤY DỮ LIỆU CÓ STATUS ='TR'--> 3.TRẢ VỀ MỘT
 			// RESULTSET --> 4.1 LƯU LIỆU TRONG LIST VÀ ĐÓNG KẾT NỐI
-			List<MyConfig> listConfig = getValuesFromConfig(connect_control);
+			List<MyConfig> listConfig = getValuesFromConfig(connect_control,id_config);
+			if(listConfig.isEmpty()) {
+				System.out.println("There is no data to load");
+			}
 
 			for (MyConfig myConfig : listConfig) {
 
@@ -87,17 +92,17 @@ public class DataWarehouse {
 
 			}
 			if (connect_control != null) {
-
+				
 			}
 
 		}
 
 	}
 
-	private ArrayList<MyConfig> getValuesFromConfig(Connection connection) {
+	private ArrayList<MyConfig> getValuesFromConfig(Connection connection, int id) {
 		ArrayList<MyConfig> listConfig = new ArrayList<MyConfig>();
 		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,conf.number_cols,conf.datawarehouse_table,conf.cols_date\r\n"
-				+ "FROM config conf join logs log on conf.id = log.id_config\r\n" + "WHERE log.status = 'TR';";
+				+ "FROM config conf join logs log on conf.id = log.id_config\r\n" + "WHERE   log.status = 'TR' AND log.id_config="+id+";";
 		MyConfig myConfig = null;
 		PreparedStatement statement = null;
 		ResultSet resultSet = null;
@@ -106,6 +111,7 @@ public class DataWarehouse {
 			statement = connection.prepareStatement(sql);
 			// 3. TRẢ VỀ MỘT resultSet
 			resultSet = statement.executeQuery();
+			
 			while (resultSet.next()) {
 				myConfig = new MyConfig();
 				myConfig.setId(resultSet.getInt("id_config"));
@@ -229,7 +235,7 @@ public class DataWarehouse {
 						}
 
 					} else {
-						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta + " chưa tồn tại trong table "
+						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta + " Data does not exist in the table"
 								+ config.getDatawarehouse_table());
 						String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 						for (int i = 1; i <= cols; i++) {
@@ -253,16 +259,16 @@ public class DataWarehouse {
 
 			}
 			if (rows_update_datawarehouse > 0) {
-				System.out.println(config.getDatawarehouse_table() + " đã cập nhật thêm " + rows_update_datawarehouse
+				System.out.println(config.getDatawarehouse_table() + " \r\n" + 
+						"updated row " + rows_update_datawarehouse
 						+ " dòng" + "\n\n");
 				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
 				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE",
-						config.getDatawarehouse_table() + " đã cập nhật thêm " + rows_update_datawarehouse + " dòng");
+						config.getDatawarehouse_table() + " update " + rows_update_datawarehouse + " rows");
 				// 11.GHI VÀO LOGS
 				insertLog(config, "SUCCESS", rows_update_datawarehouse);
 
 			} else {
-				System.out.println("table " + config.getDatawarehouse_table() + " không có thay đổi" + "\n\n");
 				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
 				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE",
 						config.getDatawarehouse_table() + " KHÔNG CÓ THAY ĐỔI " + "\n\n");
@@ -340,8 +346,8 @@ public class DataWarehouse {
 				System.out.println("Successfully insert the row(s)");
 
 			}
-			System.out.println("Transform data thành công từ Staging table." + config.getStaging_table()
-					+ " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
+			System.out.println("Transform data from Staging table " + config.getStaging_table()
+					+ " to datawarehouse." + config.getDatawarehouse_table() + "\n\n");
 			// 10. GỬI MAIL THÔNG BÁO INSERT THÀNH CÔNG
 			sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", "Transform data thành công từ Staging table."
 					+ config.getStaging_table() + " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
@@ -473,7 +479,6 @@ public class DataWarehouse {
 		try {
 			statement = connection.prepareStatement(sql);
 			statement.executeUpdate();
-			System.out.println("Vừa insert");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -510,7 +515,7 @@ public class DataWarehouse {
 	}
 
 	public static void main(String[] args) {
-		DataWarehouse dataWarehouse = new DataWarehouse();
+		DataWarehouse dataWarehouse = new DataWarehouse(1);
 		dataWarehouse.run();
 	}
 

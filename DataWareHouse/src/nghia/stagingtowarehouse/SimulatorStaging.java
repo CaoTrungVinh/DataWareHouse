@@ -30,6 +30,9 @@ public class SimulatorStaging {
 
 
 	}
+	public void run() throws IOException {
+		createAndInsert();
+	}
 
 	private static Object getCellValue(Cell cell, FormulaEvaluator eval) {
 		DataFormatter dataFormatter = new DataFormatter();
@@ -63,8 +66,7 @@ public class SimulatorStaging {
 			int missingValues = 0;
 
 			// Lấy file từ local
-			File myFile = new File(
-					"D:\\GitHub\\DataWareHouse\\DataWareHouse\\ListFileDownload\\" + myConfig.getFile_name());
+			File myFile = new File("ListFileDownload/"+myConfig.getFile_name());
 			FileInputStream fis = new FileInputStream(myFile);
 
 			// Finds the workbook instance for XLSX file
@@ -88,7 +90,7 @@ public class SimulatorStaging {
 				missingValues = executeInsertValues(myConfig, mySheet, myWorkBook, missingValues);
 			}
 			if(missingValues>0) {
-				insertLog(myConfig, "ERROR_EMPTY_VALUES");
+				insertLog(myConfig, "TR");
 			}else {
 				insertLog(myConfig, "TR");
 			}
@@ -150,10 +152,10 @@ public class SimulatorStaging {
 
 	public static void insertLog(MyConfig myConfig, String status) {
 		PreparedStatement statement = null;
-		int id_config = myConfig.getId();
+		int id_log = myConfig.getId_log();
 
-		String sql = "Insert into logs(id_config,time_Staging,status) VALUES(" + id_config + "," + "now(),'" + status
-				+ "')";
+		String sql = "UPDATE  logs SET time_Staging= current_timestamp(),status ='" + status
+				+ "' WHERE id = " + id_log;
 		Connection connection = GetConnection.getConnection("control");
 		try {
 			statement = connection.prepareStatement(sql);
@@ -284,6 +286,9 @@ public class SimulatorStaging {
 	private static ArrayList<MyConfig> getValuesFromConfig() {
 		GetConnection connection = new GetConnection();
 		Connection conConfig = connection.getConnection("control");
+		
+		
+		
 		ArrayList<MyConfig> listConfig = new ArrayList<MyConfig>();
 
 		PreparedStatement statement = null;
@@ -292,15 +297,16 @@ public class SimulatorStaging {
 		// lay du lieu tu bang config
 		try {
 			statement = conConfig.prepareStatement(
-					"Select id,staging_table,variabless,file_name,number_cols from config");
+					"Select l.id,l.id_config,staging_table,field_name,file_name,number_cols from config c join logs l on c.id  = l.id_config where l.status ='OK'");
 			res = statement.executeQuery();
 			while (res.next()) {
 				MyConfig config = new MyConfig();
-				config.setId(Integer.parseInt(res.getString("id")));
+				config.setId(Integer.parseInt(res.getString("id_config")));
 				config.setFile_name(res.getString("file_name"));
 				config.setStaging_table(res.getString("staging_table"));
-				config.setVariabless(res.getString("variabless"));
+				config.setVariabless(res.getString("field_name"));
 				config.setNumber_cols(res.getString("number_cols"));
+				config.setId_log(res.getInt("id"));
 				listConfig.add(config);
 			}
 		} catch (SQLException e) {
@@ -318,7 +324,6 @@ public class SimulatorStaging {
 					conConfig.close();
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
