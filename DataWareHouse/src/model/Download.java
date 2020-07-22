@@ -3,10 +3,7 @@ package model;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -18,7 +15,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.Properties;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -41,10 +37,11 @@ public class Download {
 	static String folder_download;
 	static String kieuFile;
 	static String fileName;
+	int id_config;
 
 	static String url_mysql = "jdbc:mysql://localhost/control?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	static String userName_mysql = "root";
-	static String passWord_mysql = "";
+	static String passWord_mysql = "123456";
 	
 	long millis=System.currentTimeMillis();  
 	java.sql.Date date=new java.sql.Date(millis); 
@@ -53,18 +50,15 @@ public class Download {
 		this.url = url;
 		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
 		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
+		this.id_config = 0;
 		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
 		this.mail = new SendMailSSL();
 		loadProps();
 	}
 
 	private void loadProps() throws SQLException {
-		try (FileInputStream f = new FileInputStream("config.properties")) {
-			// load the properties file
-			Properties pros = new Properties();
-			pros.load(f);
 			// assign db parameters
-			this.login_endpoint = pros.getProperty("login_endpoint");
+			this.login_endpoint = "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&session=FileStation&format=cookies";
 
 			Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 			System.out.println("ok");
@@ -75,6 +69,7 @@ public class Download {
 			System.out.println(username + " " + password);
 
 			while (rs.next()) {
+				this.id_config = rs.getInt("id");
 				url = rs.getString("source_host");
 				username = rs.getString("user_name");
 				password = rs.getString("password");
@@ -85,9 +80,7 @@ public class Download {
 			}
 			System.out.println(url + " " +username + " " + password + " " + listFile + " " + folder_download + " " + kieuFile + " " + fileName );
 
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
-		}
+		
 	}
 
 	public String getFolderPath() {
@@ -225,11 +218,12 @@ public class Download {
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
 				
-				String query = "INSERT INTO logs(time_download, status) VALUES(?,?)";
+				String query = "INSERT INTO logs(time_download, status, id_config) VALUES(?,?,?)";
 				PreparedStatement pre = connectionDB1.prepareStatement(query);
 				
 				pre.setDate(1, date);
 				pre.setString(2, "OK");
+				pre.setInt(3, id_config);
 				pre.execute();
 				System.out.println("OKE");
 				return fileDes;
@@ -273,11 +267,12 @@ public class Download {
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
 				
-				String query = "INSERT INTO logs(time_download, status) VALUES(?,?)";
+				String query = "INSERT INTO logs(time_download, status,id_config) VALUES(?,?,?)";
 				PreparedStatement pre = connectionDB1.prepareStatement(query);
 				
 				pre.setDate(1, date);
 				pre.setString(2, "OK");
+				pre.setInt(id_config, 3);
 				pre.execute();
 				System.out.println("OKE");
 			}
@@ -300,19 +295,20 @@ public class Download {
 
 		}
 	}
-
-	public static void main(String[] args) throws Exception {
-//		Download dw = new Download("/ECEP/song.nguyen/DW_2020/");
-		Download dw = new Download("http://drive.ecepvn.org:5000/");
-		dw.login();
-//		dw.getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", dw.getNotice().toString());
-		dw.download();
-//		dw.downloadFile();
-		
-//		dw.getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", dw.getNoticeDownLoad().toString());
-
-//		dw.downloadAllFile(dw.listFiles(), listFile);
+	public void run()  {
+		try {
+			login();
+//			getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", noticeLogin.toString());
+			
+			downloadFile();
+//			getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 
 	}
+
+
 }
