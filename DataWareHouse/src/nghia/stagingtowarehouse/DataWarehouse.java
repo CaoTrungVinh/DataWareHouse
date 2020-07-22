@@ -1,12 +1,14 @@
 package nghia.stagingtowarehouse;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.mysql.cj.jdbc.result.ResultSetMetaData;
 
 import FileToData.GetConnection;
@@ -74,8 +76,9 @@ public class DataWarehouse {
 					}
 					// NHÁNH 2: ĐÃ TỒN TẠI DỮ LIỆU
 					else {
-						// 8. KIỂM TRA TỪNG PK TRONG TABLE CÓ TỒN TẠI KHÔNG --> CHƯA TỒN TẠI THÌ THÊM ROW MỚI VÀO
-						compareData(connect_staging, connect_warehouse, myConfig);
+						// 8. KIỂM TRA TỪNG PK TRONG TABLE CÓ TỒN TẠI KHÔNG --> CHƯA TỒN TẠI THÌ THÊM
+						// ROW MỚI VÀO
+						updateData(connect_staging, connect_warehouse, myConfig);
 
 					}
 				}
@@ -83,13 +86,17 @@ public class DataWarehouse {
 				// *7
 
 			}
+			if (connect_control != null) {
+
+			}
+
 		}
 
 	}
 
 	private ArrayList<MyConfig> getValuesFromConfig(Connection connection) {
 		ArrayList<MyConfig> listConfig = new ArrayList<MyConfig>();
-		String sql = "SELECT log.id_config, conf.staging_table, conf.variabless,conf.number_cols,conf.datawarehouse_table\r\n"
+		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,conf.number_cols,conf.datawarehouse_table,conf.cols_date\r\n"
 				+ "FROM config conf join logs log on conf.id = log.id_config\r\n" + "WHERE log.status = 'TR';";
 		MyConfig myConfig = null;
 		PreparedStatement statement = null;
@@ -103,9 +110,11 @@ public class DataWarehouse {
 				myConfig = new MyConfig();
 				myConfig.setId(resultSet.getInt("id_config"));
 				myConfig.setStaging_table(resultSet.getString("staging_table"));
-				myConfig.setVariabless(resultSet.getString("variabless"));
+				myConfig.setVariabless(resultSet.getString("conf.field_name"));
 				myConfig.setNumber_cols(resultSet.getString("number_cols"));
 				myConfig.setDatawarehouse_table(resultSet.getString("datawarehouse_table"));
+				myConfig.setId_log(resultSet.getInt("id"));
+				myConfig.setCols_date(resultSet.getString("cols_date"));
 
 				// 4.1 LƯU DỮ LIỆU VÀO MỘT CÁI LIST
 				listConfig.add(myConfig);
@@ -135,13 +144,13 @@ public class DataWarehouse {
 		return listConfig;
 	}
 
-	private void compareData(Connection connect_staging, Connection connect_warehouse, MyConfig config) {
+	private void updateData(Connection connect_staging, Connection connect_warehouse, MyConfig config) {
 		int cols = Integer.parseInt(config.getNumber_cols());
 		String fields[] = config.getVariabless().split(",");
 
 		String primaryKeySta = "";
-		
-		int rows_update_datawarehouse =0;
+
+		int rows_update_datawarehouse = 0;
 
 		String sql = "SELECT * FROM " + config.getStaging_table();
 		PreparedStatement statement = null;
@@ -150,7 +159,7 @@ public class DataWarehouse {
 		ResultSet resultWareHouse = null;
 
 		try {
-			
+
 			statement = connect_staging.prepareStatement(sql);
 			result = statement.executeQuery();
 			while (result.next()) {
@@ -166,16 +175,68 @@ public class DataWarehouse {
 				resultWareHouse = statementWareHouse.executeQuery();
 
 				while (resultWareHouse.next()) {
-					//8. KIỂM TRA TỪNG PK 
-					//RESULT TRẢ VỀ 1 NẾU TỒN TẠI NGƯỢC LẠI TRẢ VỀ 0
+					// 8. KIỂM TRA TỪNG PK
+					// RESULT TRẢ VỀ 1 NẾU TỒN TẠI NGƯỢC LẠI TRẢ VỀ 0
 					if (resultWareHouse.getInt(1) == 1) {
+						// NẾU TỒN TẠI RỒI THÌ KIỂM TRA TỪNG DÒNG CÓ SỰ THAY ĐỔI GÌ KHÔNG
+						String sqlGet = "Select * from " + config.getDatawarehouse_table() + " where " + fields[0]
+								+ " = '" + primaryKeySta + "';";
+
+						PreparedStatement statementGet = connect_warehouse.prepareStatement(sqlGet);
+						ResultSet resutlSetGet = statementGet.executeQuery();
+						ResultSetMetaData reMeta = (ResultSetMetaData) resutlSetGet.getMetaData();
+						while (resutlSetGet.next()) {
+
+							for (int i = 2; i <= cols; i++) {
+								// SO SÁNH GIỮA CÁC DÒNG CỦA 2 BẢNG
+								if (reMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
+									if (!formatDate(result.getString(i)).toString()
+											.equalsIgnoreCase(resutlSetGet.getDate(i).toString())) {
+										String sqlUpadte = "";
+
+										sqlUpadte = "Update " + config.getDatawarehouse_table() + " SET "
+												+ reMeta.getColumnName(i) + "='" + formatDate(result.getString(i))
+												+ "' WHERE " + reMeta.getColumnName(1) + "=" + result.getInt(1) + "";
+
+										System.out.println(sqlUpadte);
+										PreparedStatement statementUpdate = connect_warehouse
+												.prepareStatement(sqlUpadte);
+										statementUpdate.execute();
+
+										System.out.println(result.getString(i) + " ----> " + resutlSetGet.getString(i));
+									}
+								} else if (result.getString(i) != null && resutlSetGet.getString(i) != null) {
+									if (result.getString(i) == null || resutlSetGet.getString(i) == null) {
+										System.out.println(result.getString(i) + " ----> " + resutlSetGet.getString(i));
+									} else if (!result.getString(i).equalsIgnoreCase(resutlSetGet.getString(i))) {
+										String sqlUpadte = "";
+
+										sqlUpadte = "Update " + config.getDatawarehouse_table() + " SET "
+												+ reMeta.getColumnName(i) + "='" + result.getString(i) + "' WHERE "
+												+ reMeta.getColumnName(1) + "=" + result.getInt(1) + "";
+
+										System.out.println(sqlUpadte);
+										PreparedStatement statementUpdate = connect_warehouse
+												.prepareStatement(sqlUpadte);
+										statementUpdate.execute();
+
+										System.out.println(result.getString(i) + " ----> " + resutlSetGet.getString(i));
+									}
+								}
+
+							}
+
+						}
 
 					} else {
 						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta + " chưa tồn tại trong table "
 								+ config.getDatawarehouse_table());
 						String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 						for (int i = 1; i <= cols; i++) {
-							if (i == cols) {
+							if (result.getString(1) == null) {
+								continue;
+
+							} else if (i == cols) {
 								sqlInsert += "'" + result.getString(i) + "');";
 							} else {
 								sqlInsert += "'" + result.getString(i) + "',";
@@ -191,27 +252,29 @@ public class DataWarehouse {
 				}
 
 			}
-			if(rows_update_datawarehouse>0) {
-				System.out.println(config.getDatawarehouse_table()+" đã cập nhật thêm "+ rows_update_datawarehouse+" dòng" +"\n\n");
-				//10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
-				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" đã cập nhật thêm "+ rows_update_datawarehouse+" dòng");
-				//11.GHI VÀO LOGS
-				insertLog(config, "SUCCESS",rows_update_datawarehouse);
-				
-			}else {
-				System.out.println("table "+config.getDatawarehouse_table()+" không có thay đổi"+"\n\n");
-				//10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
-				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" KHÔNG CÓ THAY ĐỔI "+"\n\n");
-				//11.GHI VÀO LOGS
-				insertLog(config, "SUCCESS",rows_update_datawarehouse);
+			if (rows_update_datawarehouse > 0) {
+				System.out.println(config.getDatawarehouse_table() + " đã cập nhật thêm " + rows_update_datawarehouse
+						+ " dòng" + "\n\n");
+				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
+				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE",
+						config.getDatawarehouse_table() + " đã cập nhật thêm " + rows_update_datawarehouse + " dòng");
+				// 11.GHI VÀO LOGS
+				insertLog(config, "SUCCESS", rows_update_datawarehouse);
+
+			} else {
+				System.out.println("table " + config.getDatawarehouse_table() + " không có thay đổi" + "\n\n");
+				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
+				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE",
+						config.getDatawarehouse_table() + " KHÔNG CÓ THAY ĐỔI " + "\n\n");
+				// 11.GHI VÀO LOGS
+				insertLog(config, "SUCCESS", rows_update_datawarehouse);
 			}
-			
 
 		} catch (SQLException e) {
-			//THÔNG BÁO LỖI
-			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" KHÔNG THÊ INSERT DỮ LIỆU");
-			//GHI LOGS LỖI
-			insertLog(config, "SUCCESS",rows_update_datawarehouse);
+			// THÔNG BÁO LỖI
+//			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" KHÔNG THÊ INSERT DỮ LIỆU");
+			// GHI LOGS LỖI
+			insertLog(config, "TR", rows_update_datawarehouse);
 			e.printStackTrace();
 		} finally {
 			// 4.2 ĐÓNG KẾT NỐI DATABASE control_data
@@ -249,10 +312,22 @@ public class DataWarehouse {
 			// 8. LẤY DỮ LIỆU TRONG TABLE CỦA DATABASE Staging
 			statement = connec_Stag.prepareStatement(sql);
 			result = statement.executeQuery();
+			ResultSetMetaData resMetaData = (ResultSetMetaData) result.getMetaData();
 			while (result.next()) {
 				String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 				for (int i = 1; i <= cols; i++) {
-					if (i == cols) {
+					if (result.getString(1) == null) {
+						continue;
+					} else if (resMetaData.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
+						if (i == cols) {
+							sqlInsert += "'" + formatDate(result.getString(i)) + "');";
+						} else {
+							sqlInsert += "'" + formatDate(result.getString(i)) + "',";
+
+						}
+					} else if (i == 1) {
+						sqlInsert += "" + result.getString(i) + ",";
+					} else if (i == cols) {
 						sqlInsert += "'" + result.getString(i) + "');";
 					} else {
 						sqlInsert += "'" + result.getString(i) + "',";
@@ -265,18 +340,21 @@ public class DataWarehouse {
 				System.out.println("Successfully insert the row(s)");
 
 			}
-			System.out.println("Transform data thành công từ Staging table." + config.getStaging_table()+" sang datawarehouse."+ config.getDatawarehouse_table()+"\n\n");
+			System.out.println("Transform data thành công từ Staging table." + config.getStaging_table()
+					+ " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
 			// 10. GỬI MAIL THÔNG BÁO INSERT THÀNH CÔNG
-			sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", "Transform data thành công từ Staging table." + config.getStaging_table()+" sang datawarehouse."+ config.getDatawarehouse_table()+"\n\n");
+			sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", "Transform data thành công từ Staging table."
+					+ config.getStaging_table() + " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
 			// 11. CẬP NHẬT STATUS='SUCCESS'
-			insertLog(config, "SUCCESS",0);
+			insertLog(config, "SUCCESS", 0);
 
 		} catch (SQLException e) {
-			
-			//THÔNG BÁO LỖI
-			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" KHÔNG THÊ INSERT DỮ LIỆU");
-			//GHI LOGS LỖI
-			insertLog(config, "ERROR_TRANSFORM",0);
+
+			// THÔNG BÁO LỖI
+			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE",
+					config.getDatawarehouse_table() + " KHÔNG THÊ INSERT DỮ LIỆU");
+			// GHI LOGS LỖI
+			insertLog(config, "ERROR_TRANSFORM", 0);
 			e.printStackTrace();
 		} finally {
 			// 4.2 ĐÓNG KẾT NỐI DATABASE control_data
@@ -342,13 +420,14 @@ public class DataWarehouse {
 
 		// Khỏi tạo câu lệnh sql create table
 		String sql = "Create table " + config.getDatawarehouse_table() + " (";
-
+		int count_date = 0;
 		// Chạy vòng lặp để hoàn thiện câu lệnh sql
 		for (int i = 0; i < fields.length; i++) {
 			if (i == 0) {
-				sql += fields[i] + " varchar(10) PRIMARY KEY,";
+				sql += fields[i] + " INT PRIMARY KEY,";
 			} else if (i == fields.length - 1) {
 				sql += fields[i] + " varchar(225));";
+
 			} else {
 				sql += fields[i] + " varchar(255),";
 			}
@@ -375,6 +454,7 @@ public class DataWarehouse {
 				System.out.println("Khong the tao bang");
 				e.printStackTrace();
 			}
+
 		}
 
 		return isCreated;
@@ -382,16 +462,18 @@ public class DataWarehouse {
 	}
 
 	// HÀM GHI LOGS
-	public static void insertLog(MyConfig myConfig, String status,int rows_update_datawarehouse) {
+	public static void insertLog(MyConfig myConfig, String status, int rows_update_datawarehouse) {
 		PreparedStatement statement = null;
-		int id_config = myConfig.getId();
+		int id_log = myConfig.getId_log();
 
 		String sql = "UPDATE logs SET\n status='" + status
-				+ "',time_Datawarehouse=current_timestamp(),rows_update_datawarehouse="+rows_update_datawarehouse+" \n WHERE id_config=" + id_config;
+				+ "',time_Datawarehouse=current_timestamp(),rows_update_datawarehouse=" + rows_update_datawarehouse
+				+ " \n WHERE id=" + id_log;
 		Connection connection = GetConnection.getConnection("control");
 		try {
 			statement = connection.prepareStatement(sql);
 			statement.executeUpdate();
+			System.out.println("Vừa insert");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -409,6 +491,22 @@ public class DataWarehouse {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public String formatDate(String resDate) {
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+		String result = "";
+		java.util.Date parsedate;
+		try {
+			parsedate = format.parse(resDate);
+			java.sql.Date date = new java.sql.Date(parsedate.getTime());
+			result = date.toString();
+		} catch (ParseException e) {
+			result = resDate;
+			e.printStackTrace();
+		}
+		return result;
+
 	}
 
 	public static void main(String[] args) {
