@@ -16,6 +16,10 @@ public class MyConfig {
 	private String variabless;
 	private String number_cols;
 	private String datawarehouse_table;
+	private String cols_date;
+	
+	
+	private int id_log;
 	
 	
 	
@@ -47,6 +51,34 @@ public class MyConfig {
 		this.variabless = variabless;
 		this.number_cols = number_cols;
 		this.datawarehouse_table = datawarehouse;
+	}
+
+
+
+
+	public String getCols_date() {
+		return cols_date;
+	}
+
+
+
+
+	public void setCols_date(String cols_date) {
+		this.cols_date = cols_date;
+	}
+
+
+
+
+	public int getId_log() {
+		return id_log;
+	}
+
+
+
+
+	public void setId_log(int id_log) {
+		this.id_log = id_log;
 	}
 
 
