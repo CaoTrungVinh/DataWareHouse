@@ -1,12 +1,10 @@
 package run;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Scanner;
 
+import datawarehouse.DataWarehouse;
 import model.Download;
-import nghia.stagingtowarehouse.DataWarehouse;
-import nghia.stagingtowarehouse.SimulatorStaging;
 
 public class Run {
 	public static void main(String[] args) {
@@ -36,13 +34,7 @@ public class Run {
 			}	
 			System.out.println("\t\t\t STAGING");
 			//Staging
-			SimulatorStaging staging = new SimulatorStaging();
-			try {
-				staging.run();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
 			System.out.println("\t\t\t DATAWAREHOUSE");
 			//DatAwarehouse
 			DataWarehouse dataWareHouse = new DataWarehouse(selection);
