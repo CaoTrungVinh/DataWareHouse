@@ -5,6 +5,7 @@ import java.util.Scanner;
 
 import datawarehouse.DataWarehouse;
 import model.Download;
+import staging.LocalToStaging;
 
 public class Run {
 	public static void main(String[] args) {
@@ -32,13 +33,9 @@ public class Run {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}	
-			System.out.println("\t\t\t STAGING");
+			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
 			//Staging
-			
-			System.out.println("\t\t\t DATAWAREHOUSE");
-			//DatAwarehouse
-			DataWarehouse dataWareHouse = new DataWarehouse(selection);
-			dataWareHouse.run();
+			LocalToStaging staging = new LocalToStaging(1);
 		
 			
 			

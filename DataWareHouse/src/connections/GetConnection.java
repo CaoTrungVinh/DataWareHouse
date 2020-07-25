@@ -23,7 +23,7 @@ public class GetConnection {
 				url = "jdbc:mysql://localhost:3306/";
 				databasebName = "control";
 				user = "root";
-				pass = "123456";
+				pass = "";
 			
 		
 		} else if (location.equalsIgnoreCase("staging")) {
@@ -31,13 +31,13 @@ public class GetConnection {
 			url = "jdbc:mysql://localhost:3306/";
 			databasebName = "staging";
 			user = "root";
-			pass = "123456";
+			pass = "";
 		} else if (location.equalsIgnoreCase("datawarehouse")) {
 			driver = "com.mysql.jdbc.Driver";
 			url = "jdbc:mysql://localhost:3306/";
 			databasebName = "datawarehouse";
 			user = "root";
-			pass = "123456";
+			pass = "";
 		} else {
 			System.out.println("Nhap ten database sai !!!");
 
