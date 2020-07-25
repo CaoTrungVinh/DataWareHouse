@@ -1,4 +1,4 @@
-package nghia.stagingtowarehouse;
+package datawarehouse;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -9,15 +9,18 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.net.ssl.SSLException;
+
 import com.mysql.cj.jdbc.result.ResultSetMetaData;
 
-import FileToData.GetConnection;
+import connections.GetConnection;
 import mail.SendMailSSL;
-import model.MyConfig;
+import model.MyConfigDataWare;
 
 public class DataWarehouse {
 	SendMailSSL sendMail = null;
-	 int id_config = 0;
+	int id_config = 0;
 
 	public DataWarehouse(int id_config) {
 		sendMail = new SendMailSSL();
@@ -43,12 +46,12 @@ public class DataWarehouse {
 		} else {
 			// NẾU KẾT NỐI THÀNH CÔNG --> 2.LẤY DỮ LIỆU CÓ STATUS ='TR'--> 3.TRẢ VỀ MỘT
 			// RESULTSET --> 4.1 LƯU LIỆU TRONG LIST VÀ ĐÓNG KẾT NỐI
-			List<MyConfig> listConfig = getValuesFromConfig(connect_control,id_config);
-			if(listConfig.isEmpty()) {
+			List<MyConfigDataWare> listConfig = getValuesFromConfig(connect_control, id_config);
+			if (listConfig.isEmpty()) {
 				System.out.println("There is no data to load");
 			}
 
-			for (MyConfig myConfig : listConfig) {
+			for (MyConfigDataWare myConfig : listConfig) {
 
 				// 5. MỞ KẾT NỐI DATABASE Staging
 				Connection connect_warehouse = GetConnection.getConnection("datawarehouse");
@@ -92,18 +95,19 @@ public class DataWarehouse {
 
 			}
 			if (connect_control != null) {
-				
+
 			}
 
 		}
 
 	}
 
-	private ArrayList<MyConfig> getValuesFromConfig(Connection connection, int id) {
-		ArrayList<MyConfig> listConfig = new ArrayList<MyConfig>();
+	private ArrayList<MyConfigDataWare> getValuesFromConfig(Connection connection, int id)  {
+		ArrayList<MyConfigDataWare> listConfig = new ArrayList<MyConfigDataWare>();
 		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,conf.number_cols,conf.datawarehouse_table,conf.cols_date\r\n"
-				+ "FROM config conf join logs log on conf.id = log.id_config\r\n" + "WHERE   log.status = 'TR' AND log.id_config="+id+";";
-		MyConfig myConfig = null;
+				+ "FROM config conf join logs log on conf.id = log.id_config\r\n"
+				+ "WHERE   log.status = 'TR' AND log.id_config=" + id + ";";
+		MyConfigDataWare myConfig = null;
 		PreparedStatement statement = null;
 		ResultSet resultSet = null;
 
@@ -111,9 +115,9 @@ public class DataWarehouse {
 			statement = connection.prepareStatement(sql);
 			// 3. TRẢ VỀ MỘT resultSet
 			resultSet = statement.executeQuery();
-			
+
 			while (resultSet.next()) {
-				myConfig = new MyConfig();
+				myConfig = new MyConfigDataWare();
 				myConfig.setId(resultSet.getInt("id_config"));
 				myConfig.setStaging_table(resultSet.getString("staging_table"));
 				myConfig.setVariabless(resultSet.getString("conf.field_name"));
@@ -135,22 +139,23 @@ public class DataWarehouse {
 					statement.close();
 				}
 				if (resultSet != null) {
+
 					resultSet.close();
 				}
 				if (connection != null) {
 					connection.close();
+					
 				}
 
 			} catch (SQLException e) {
 				System.out.println("Khong the tao bang");
-				e.printStackTrace();
 			}
 		}
 
 		return listConfig;
 	}
 
-	private void updateData(Connection connect_staging, Connection connect_warehouse, MyConfig config) {
+	private void updateData(Connection connect_staging, Connection connect_warehouse, MyConfigDataWare config) {
 		int cols = Integer.parseInt(config.getNumber_cols());
 		String fields[] = config.getVariabless().split(",");
 
@@ -235,8 +240,8 @@ public class DataWarehouse {
 						}
 
 					} else {
-						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta + " Data does not exist in the table"
-								+ config.getDatawarehouse_table());
+						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta
+								+ " Data does not exist in the table" + config.getDatawarehouse_table());
 						String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 						for (int i = 1; i <= cols; i++) {
 							if (result.getString(1) == null) {
@@ -259,9 +264,8 @@ public class DataWarehouse {
 
 			}
 			if (rows_update_datawarehouse > 0) {
-				System.out.println(config.getDatawarehouse_table() + " \r\n" + 
-						"updated row " + rows_update_datawarehouse
-						+ " dòng" + "\n\n");
+				System.out.println(config.getDatawarehouse_table() + " \r\n" + "updated row "
+						+ rows_update_datawarehouse + " dòng" + "\n\n");
 				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
 				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE",
 						config.getDatawarehouse_table() + " update " + rows_update_datawarehouse + " rows");
@@ -305,7 +309,7 @@ public class DataWarehouse {
 		}
 	}
 
-	private void insertDatawarehouse(Connection connec_Stag, Connection connect_warehouse, MyConfig config) {
+	private void insertDatawarehouse(Connection connec_Stag, Connection connect_warehouse, MyConfigDataWare config) {
 		int cols = Integer.parseInt(config.getNumber_cols());
 
 		String sql = "SELECT * FROM " + config.getStaging_table();
@@ -346,8 +350,8 @@ public class DataWarehouse {
 				System.out.println("Successfully insert the row(s)");
 
 			}
-			System.out.println("Transform data from Staging table " + config.getStaging_table()
-					+ " to datawarehouse." + config.getDatawarehouse_table() + "\n\n");
+			System.out.println("Transform data from Staging table " + config.getStaging_table() + " to datawarehouse."
+					+ config.getDatawarehouse_table() + "\n\n");
 			// 10. GỬI MAIL THÔNG BÁO INSERT THÀNH CÔNG
 			sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", "Transform data thành công từ Staging table."
 					+ config.getStaging_table() + " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
@@ -417,7 +421,7 @@ public class DataWarehouse {
 		return 0;
 	}
 
-	public static boolean createTable(MyConfig config, Connection connectionStaging) {
+	public static boolean createTable(MyConfigDataWare config, Connection connectionStaging) {
 		boolean isCreated = false;
 		PreparedStatement statement = null;
 		ResultSet res = null;
@@ -468,7 +472,7 @@ public class DataWarehouse {
 	}
 
 	// HÀM GHI LOGS
-	public static void insertLog(MyConfig myConfig, String status, int rows_update_datawarehouse) {
+	public static void insertLog(MyConfigDataWare myConfig, String status, int rows_update_datawarehouse) {
 		PreparedStatement statement = null;
 		int id_log = myConfig.getId_log();
 

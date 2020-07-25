@@ -1,6 +1,6 @@
 package model;
 
-public class MyConfig {
+public class MyConfigDataWare {
 	private int id;
 	private String source_host;
 	private String user_name;
@@ -24,14 +24,14 @@ public class MyConfig {
 	
 	
 	
-	public MyConfig() {
+	public MyConfigDataWare() {
 	}
 
 
 
 
 	//contructor 
-	public MyConfig(int id, String source_host, String user_name, String password, String list_file,
+	public MyConfigDataWare(int id, String source_host, String user_name, String password, String list_file,
 			String folder_download, String error_dir, String success_dir, String extension_file, String file_name,
 			String delimiter, String staging_table, String variabless, String number_cols,
 			String datawarehouse) {
