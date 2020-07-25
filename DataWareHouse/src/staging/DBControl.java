@@ -126,22 +126,22 @@ public class DBControl {
 		return listConfig;
 	}
 	// Phương thức lấy một dòng log đầu tiên trong table log có state = ER
-		public static Log getLogsWithStatus(String condition) throws SQLException {
-			Log log = new Log();
+		public static ArrayList<Log> getLogsWithStatus(String condition) throws SQLException {
+			Log log = null;
+			ArrayList<Log> listLog = new ArrayList<Log>();
 			Connection conn = GetConnection.getConnection("control");
 			String selectLog = "select * from logs where status=?";
 			PreparedStatement ps = conn.prepareStatement(selectLog);
 			ps.setString(1, condition);
 			ResultSet rs = ps.executeQuery();
-			rs.last();
-			if (rs.getRow() >= 1) {
-				rs.first();
+			while(rs.next()){
 				log.setId(rs.getInt("id"));
 				log.setFile_name(rs.getString("file_name"));
 				log.setStatus(rs.getString("status"));
 				log.setId_config(rs.getInt("id_config"));
+				listLog.add(log);
 			}
-			return log;
+			return listLog;
 		}
 
 		// Phương thức chèn giá trị vào bảng có trong db staging, giá trị có
@@ -265,8 +265,12 @@ public class DBControl {
 	// Hàm main này để test các phương thức trên chạy ổn hay chưa:
 		public static void main(String[] args) throws SQLException  {
 			DBControl cb = new DBControl("control","config","staging");
-			Log log = cb.getLogsWithStatus("ER");
-			System.out.println(log.toString());
+			ArrayList<Log> listlog = cb.getLogsWithStatus("ER");
+			for (Log log2 : listlog) {
+				System.out.println(log2.toString());
+			}
+			
+			
 		}
 
 //	public static void main(String[] args) throws ClassNotFoundException, SQLException {

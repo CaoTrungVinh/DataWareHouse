@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 //import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -68,61 +69,64 @@ public class LocalToStaging {
 			System.out.println(staging_table);
 			System.out.println(folder_download);
 			// Lấy các trường có trong dòng log đầu tiên có state=ER;
-			Log log = dp.getCdb().getLogsWithStatus(this.status);
-			// Lấy file_name từ trong config ra
-			String file_name = log.getFile_name();
-			// Ráp với importDir đề được cái đường dẫn tới file
-			String sourceFile = folder_download + File.separator + file_name;
-			// Đếm số trường trong filedName ở trong bảng config
-			StringTokenizer str = new StringTokenizer(field_name, delim);
-			System.out.println(sourceFile);
-			File file = new File(sourceFile);
-			// Lấy cái đuôi file ra coi đó là kiểu file gì để xử lí đọc file
-			extention = file.getPath().endsWith(".xlsx") ? EXT_EXCEL
-					: file.getPath().endsWith(".txt") ? EXT_TEXT : EXT_CSV;
-			if (file.exists()) {
-					String values = "";
-					// Nếu file là .txt thì đọc file .txt
-					if (extention.equals(".txt")) {
-						values = dp.readValuesTXT(file, str.countTokens());
-						extention = ".txt";
-						// Nếu file là .xlsx thì đọc file .xlsx
-					} else if (extention.equals(".xlsx")) {
-						values = dp.readValuesXLSX(file, str.countTokens());
-						extention = ".xlsx";
-					}
-					System.out.println(values);
-					// Nếu đọc được giá trị rồi
-					if (values != null) {
-						String table = "logs";
-						String status;
-					
-						int config_id = config.getId();
-						// time
-						String time_staging = getCurrentTime();
-						String target_dir;
-						// thì mình ghi dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
-						if (dp.writeDataToBD(field_name, staging_table, values)) {
-						status = "TR";
-							// update cái log lại, chuyển file đã extract xong vào thư mục success
-							dp.getCdb().updateLog(status, time_staging, file_name);
-//							target_dir = config.getSuccess_dir();
-//							if (moveFile(target_dir, file))
-//								;
-
-						} else {
-							// Nếu mà bị lỗi thì update log là state=Not TR và và ghi file vào thư mục error
-							status = "Not TR";
-							dp.getCdb().updateLog(status, time_staging, file_name);
-//							target_dir = config.getError_dir();
-//							if (moveFile(target_dir, file))
-//								;
+			ArrayList<Log> listlog = dp.getCdb().getLogsWithStatus(this.status);
+			for (Log log : listlog) {
+				// Lấy file_name từ trong config ra
+				String file_name = log.getFile_name();
+				// Ráp với importDir đề được cái đường dẫn tới file
+				String sourceFile = folder_download + File.separator + file_name;
+				// Đếm số trường trong filedName ở trong bảng config
+				StringTokenizer str = new StringTokenizer(field_name, delim);
+				System.out.println(sourceFile);
+				File file = new File(sourceFile);
+				// Lấy cái đuôi file ra coi đó là kiểu file gì để xử lí đọc file
+				extention = file.getPath().endsWith(".xlsx") ? EXT_EXCEL
+						: file.getPath().endsWith(".txt") ? EXT_TEXT : EXT_CSV;
+				if (file.exists()) {
+						String values = "";
+						// Nếu file là .txt thì đọc file .txt
+						if (extention.equals(".txt")) {
+							values = dp.readValuesTXT(file, str.countTokens());
+							extention = ".txt";
+							// Nếu file là .xlsx thì đọc file .xlsx
+						} else if (extention.equals(".xlsx")) {
+							values = dp.readValuesXLSX(file, str.countTokens());
+							extention = ".xlsx";
 						}
-					}
-			} else {
-				System.out.println("Path not exists!!!");
-				return;
+						System.out.println(values);
+						// Nếu đọc được giá trị rồi
+						if (values != null) {
+							String table = "logs";
+							String status;
+						
+							int config_id = config.getId();
+							// time
+							String time_staging = getCurrentTime();
+							String target_dir;
+							// thì mình ghi dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
+							if (dp.writeDataToBD(field_name, staging_table, values)) {
+							status = "TR";
+								// update cái log lại, chuyển file đã extract xong vào thư mục success
+								dp.getCdb().updateLog(status, time_staging, file_name);
+//								target_dir = config.getSuccess_dir();
+//								if (moveFile(target_dir, file))
+//									;
+
+							} else {
+								// Nếu mà bị lỗi thì update log là state=Not TR và và ghi file vào thư mục error
+								status = "Not TR";
+								dp.getCdb().updateLog(status, time_staging, file_name);
+//								target_dir = config.getError_dir();
+//								if (moveFile(target_dir, file))
+//									;
+							}
+						}
+				} else {
+					System.out.println("Path not exists!!!");
+					return;
+				}
 			}
+		
 		}
 	}
 	// Phương thức lấy ra thời gian hiện tạo để ghi vào log:
