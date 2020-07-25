@@ -1,7 +1,6 @@
 package datawarehouse;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,8 +8,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.net.ssl.SSLException;
 
 import com.mysql.cj.jdbc.result.ResultSetMetaData;
 
@@ -78,6 +75,7 @@ public class DataWarehouse {
 						if (createTable(myConfig, connect_warehouse)) {
 							// 8. LẤY DỮ LIỆU ---> 9. INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
 							insertDatawarehouse(connect_staging, connect_warehouse, myConfig);
+							truncateTable(connect_staging, myConfig);
 
 						}
 
@@ -87,6 +85,7 @@ public class DataWarehouse {
 						// 8. KIỂM TRA TỪNG PK TRONG TABLE CÓ TỒN TẠI KHÔNG --> CHƯA TỒN TẠI THÌ THÊM
 						// ROW MỚI VÀO
 						updateData(connect_staging, connect_warehouse, myConfig);
+						truncateTable(connect_staging, myConfig);
 
 					}
 				}
@@ -95,16 +94,29 @@ public class DataWarehouse {
 
 			}
 			if (connect_control != null) {
-
+//				connect_control.close();
 			}
 
 		}
 
 	}
-
+	private void truncateTable(Connection connection,MyConfigDataWare myConfig) {
+		PreparedStatement statementTruncate;
+		try {
+			statementTruncate = connection.prepareStatement("TRUNCATE TABLE "+myConfig.getStaging_table());
+			statementTruncate.execute();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("TRUNCATED "+ myConfig.getStaging_table());
+	}
 	private ArrayList<MyConfigDataWare> getValuesFromConfig(Connection connection, int id)  {
 		ArrayList<MyConfigDataWare> listConfig = new ArrayList<MyConfigDataWare>();
-		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,conf.number_cols,conf.datawarehouse_table,conf.cols_date\r\n"
+		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,conf.number_cols,conf.datawarehouse_table,conf.cols_date, conf.field_name_dwh,"
+				+ "conf.number_cols_dwh \r\n"
 				+ "FROM config conf join logs log on conf.id = log.id_config\r\n"
 				+ "WHERE   log.status = 'TR' AND log.id_config=" + id + ";";
 		MyConfigDataWare myConfig = null;
@@ -121,10 +133,11 @@ public class DataWarehouse {
 				myConfig.setId(resultSet.getInt("id_config"));
 				myConfig.setStaging_table(resultSet.getString("staging_table"));
 				myConfig.setVariabless(resultSet.getString("conf.field_name"));
-				myConfig.setNumber_cols(resultSet.getString("number_cols"));
 				myConfig.setDatawarehouse_table(resultSet.getString("datawarehouse_table"));
 				myConfig.setId_log(resultSet.getInt("id"));
 				myConfig.setCols_date(resultSet.getString("cols_date"));
+				myConfig.setField_name_dwh(resultSet.getString("field_name_dwh"));
+				myConfig.setNumber_cols_dwh(resultSet.getInt("number_cols_dwh"));
 
 				// 4.1 LƯU DỮ LIỆU VÀO MỘT CÁI LIST
 				listConfig.add(myConfig);
@@ -143,7 +156,7 @@ public class DataWarehouse {
 					resultSet.close();
 				}
 				if (connection != null) {
-					connection.close();
+//					connection.close();
 					
 				}
 
@@ -156,14 +169,25 @@ public class DataWarehouse {
 	}
 
 	private void updateData(Connection connect_staging, Connection connect_warehouse, MyConfigDataWare config) {
-		int cols = Integer.parseInt(config.getNumber_cols());
-		String fields[] = config.getVariabless().split(",");
+		int cols = config.getNumber_cols_dwh();
 
 		String primaryKeySta = "";
 
 		int rows_update_datawarehouse = 0;
+		
+		
+		String sqlSelectStaging = "SELECT ";
+		String field_dwh[] = config.getField_name_dwh().split(",");
+		for (int i = 0; i < field_dwh.length; i++) {
+			if(i==field_dwh.length-1) {
+				sqlSelectStaging += field_dwh[i] ;
+			}else {
+				sqlSelectStaging += field_dwh[i]+"," ;
+			}
+			
+		}
+		 sqlSelectStaging += " FROM " + config.getStaging_table();
 
-		String sql = "SELECT * FROM " + config.getStaging_table();
 		PreparedStatement statement = null;
 		ResultSet result = null;
 		PreparedStatement statementWareHouse = null;
@@ -171,13 +195,16 @@ public class DataWarehouse {
 
 		try {
 
-			statement = connect_staging.prepareStatement(sql);
+			statement = connect_staging.prepareStatement(sqlSelectStaging);
 			result = statement.executeQuery();
 			while (result.next()) {
 				String sqlCheckExist = "SELECT COUNT(*)\r\n FROM " + config.getDatawarehouse_table() + "\r\t WHERE "
-						+ fields[0] + "='";
+						+ field_dwh[0] + "='";
 				ResultSetMetaData rsMeta = (ResultSetMetaData) result.getMetaData();
 				primaryKeySta = result.getString(1);
+				if(primaryKeySta==null||primaryKeySta.equals("")) {
+					continue;
+				}
 
 				// LẤY KHÓA CHÍNH CỦA TỪNG ROW RA SO SÁNH
 				sqlCheckExist += primaryKeySta + "';";
@@ -190,7 +217,7 @@ public class DataWarehouse {
 					// RESULT TRẢ VỀ 1 NẾU TỒN TẠI NGƯỢC LẠI TRẢ VỀ 0
 					if (resultWareHouse.getInt(1) == 1) {
 						// NẾU TỒN TẠI RỒI THÌ KIỂM TRA TỪNG DÒNG CÓ SỰ THAY ĐỔI GÌ KHÔNG
-						String sqlGet = "Select * from " + config.getDatawarehouse_table() + " where " + fields[0]
+						String sqlGet = "Select * from " + config.getDatawarehouse_table() + " where " + field_dwh[0]
 								+ " = '" + primaryKeySta + "';";
 
 						PreparedStatement statementGet = connect_warehouse.prepareStatement(sqlGet);
@@ -283,8 +310,6 @@ public class DataWarehouse {
 		} catch (SQLException e) {
 			// THÔNG BÁO LỖI
 //			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" KHÔNG THÊ INSERT DỮ LIỆU");
-			// GHI LOGS LỖI
-			insertLog(config, "TR", rows_update_datawarehouse);
 			e.printStackTrace();
 		} finally {
 			// 4.2 ĐÓNG KẾT NỐI DATABASE control_data
@@ -310,9 +335,20 @@ public class DataWarehouse {
 	}
 
 	private void insertDatawarehouse(Connection connec_Stag, Connection connect_warehouse, MyConfigDataWare config) {
-		int cols = Integer.parseInt(config.getNumber_cols());
+		int cols = config.getNumber_cols_dwh();
+		String sqlSelectStaging = "SELECT ";
+		String field_dwh[] = config.getField_name_dwh().split(",");
+		for (int i = 0; i < field_dwh.length; i++) {
+			if(i==field_dwh.length-1) {
+				sqlSelectStaging += field_dwh[i] ;
+			}else {
+				sqlSelectStaging += field_dwh[i]+"," ;
+			}
+			
+		}
+		 sqlSelectStaging += " FROM " + config.getStaging_table();
 
-		String sql = "SELECT * FROM " + config.getStaging_table();
+		
 		PreparedStatement statement = null;
 		ResultSet result = null;
 		PreparedStatement statementWareHouse = null;
@@ -320,7 +356,7 @@ public class DataWarehouse {
 
 		try {
 			// 8. LẤY DỮ LIỆU TRONG TABLE CỦA DATABASE Staging
-			statement = connec_Stag.prepareStatement(sql);
+			statement = connec_Stag.prepareStatement(sqlSelectStaging);
 			result = statement.executeQuery();
 			ResultSetMetaData resMetaData = (ResultSetMetaData) result.getMetaData();
 			while (result.next()) {
@@ -357,6 +393,8 @@ public class DataWarehouse {
 					+ config.getStaging_table() + " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
 			// 11. CẬP NHẬT STATUS='SUCCESS'
 			insertLog(config, "SUCCESS", 0);
+			
+			
 
 		} catch (SQLException e) {
 
@@ -426,7 +464,7 @@ public class DataWarehouse {
 		PreparedStatement statement = null;
 		ResultSet res = null;
 		// Tạo ra một mảng từng field trong table
-		String[] fields = config.getVariabless().split(",");
+		String[] fields = config.getField_name_dwh().split(",");
 
 		// Khỏi tạo câu lệnh sql create table
 		String sql = "Create table " + config.getDatawarehouse_table() + " (";
@@ -493,7 +531,7 @@ public class DataWarehouse {
 					statement.close();
 				}
 				if (connection != null) {
-					connection.close();
+//					connection.close();
 				}
 
 			} catch (SQLException e) {

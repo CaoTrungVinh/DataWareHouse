@@ -14,11 +14,43 @@ public class MyConfigDataWare {
 	private String delimiter;
 	private String staging_table;
 	private String variabless;
-	private String number_cols;
+//	private String number_cols;
 	private String datawarehouse_table;
 	private String cols_date;
+	private String field_name_dwh;
+	private int number_cols_dwh;
 	
 	
+	
+	
+	public int getNumber_cols_dwh() {
+		return number_cols_dwh;
+	}
+
+
+
+
+	public void setNumber_cols_dwh(int number_cols_dwh) {
+		this.number_cols_dwh = number_cols_dwh;
+	}
+
+
+
+
+	public String getField_name_dwh() {
+		return field_name_dwh;
+	}
+
+
+
+
+	public void setField_name_dwh(String field_name_dwh) {
+		this.field_name_dwh = field_name_dwh;
+	}
+
+
+
+
 	private int id_log;
 	
 	
@@ -49,7 +81,7 @@ public class MyConfigDataWare {
 		this.delimiter = delimiter;
 		this.staging_table = staging_table;
 		this.variabless = variabless;
-		this.number_cols = number_cols;
+//		this.number_cols = number_cols;
 		this.datawarehouse_table = datawarehouse;
 	}
 
@@ -277,21 +309,21 @@ public class MyConfigDataWare {
 
 
 
-
-	public String getNumber_cols() {
-		return number_cols;
-	}
-
-
-
-
-	public void setNumber_cols(String number_cols) {
-		this.number_cols = number_cols;
-	}
-
-
-
-	
+//
+//	public String getNumber_cols() {
+//		return number_cols;
+//	}
+//
+//
+//
+//
+//	public void setNumber_cols(String number_cols) {
+//		this.number_cols = number_cols;
+//	}
+//
+//
+//
+//	
 	
 	
 	
