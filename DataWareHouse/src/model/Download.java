@@ -260,6 +260,7 @@ public class Download {
 					in.close();
 					out.close();
 				}
+				MyConfigDataWare myConfig;
 				System.out.println("down file thanh cong");
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
