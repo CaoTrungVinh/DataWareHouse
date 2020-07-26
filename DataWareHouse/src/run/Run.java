@@ -1,19 +1,18 @@
 package run;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Scanner;
 
+import datawarehouse.DataWarehouse;
 import model.Download;
-import nghia.stagingtowarehouse.DataWarehouse;
-import nghia.stagingtowarehouse.SimulatorStaging;
+import staging.LocalToStaging;
 
 public class Run {
 	public static void main(String[] args) {
 	
-		System.out.println("SELECTION: 1 - sinh vien, 2 - mon hoc\nNhap config de RUN: ");
+		System.out.println("SELECTION: 1 - sinh vien, 2 - mon hoc,3 - dang ky, 4- lop hoc\nNhap config de RUN: ");
 		Scanner sc = new Scanner(System.in);
-		
+		LocalToStaging staging = null;
 		String line = sc.nextLine();
 		int selection = 0;
 		try {
@@ -27,32 +26,85 @@ public class Run {
 		switch (selection) {
 		case  1:
 			//Download 
-			System.out.println("\t\t\t DOWNLOAD");
-			try {
-				Download dow = new Download("http://drive.ecepvn.org:5000/");
-				dow.run();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}	
-			System.out.println("\t\t\t STAGING");
+//			System.out.println("\t\t\t DOWNLOAD");
+//			try {
+//				Download dow = new Download("http://drive.ecepvn.org:5000/");
+//				dow.run();
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}	
+			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
 			//Staging
-			SimulatorStaging staging = new SimulatorStaging();
+			 staging = new LocalToStaging(1);
 			try {
 				staging.run();
-			} catch (IOException e) {
+			} catch (ClassNotFoundException | SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("\t\t\t DATAWAREHOUSE");
-			//DatAwarehouse
-			DataWarehouse dataWareHouse = new DataWarehouse(selection);
-			dataWareHouse.run();
 		
 			
 			
 			break;
 		case 2:
-			System.out.println("chua co ");
+			//Download 
+//			System.out.println("\t\t\t DOWNLOAD");
+//			try {
+//				Download dow = new Download("http://drive.ecepvn.org:5000/");
+//				dow.run();
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}	
+			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
+			//Staging
+			 staging = new LocalToStaging(2);
+			try {
+				staging.run();
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			break;
+		case 3:
+			//Download 
+//			System.out.println("\t\t\t DOWNLOAD");
+//			try {
+//				Download dow = new Download("http://drive.ecepvn.org:5000/");
+//				dow.run();
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}	
+			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
+			//Staging
+			 staging = new LocalToStaging(3);
+			try {
+				staging.run();
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			break;
+		case 4:
+			//Download 
+//			System.out.println("\t\t\t DOWNLOAD");
+//			try {
+//				Download dow = new Download("http://drive.ecepvn.org:5000/");
+//				dow.run();
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}	
+			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
+			//Staging
+			 staging = new LocalToStaging(4);
+			try {
+				staging.run();
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			break;
 
 		default:
