@@ -20,7 +20,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import FileToData.GetConnection;
 import mail.SendMailSSL;
 
 public class Download {
@@ -240,7 +239,7 @@ public class Download {
 		for (int i = 0; i < lisFile.size(); i++) {
 			String srcNameFile = lisFile.get(i);
 			String nameFile = srcNameFile.substring(srcNameFile.lastIndexOf("/") + 1);
-			if (nameFile.contains(kieuFile)) {
+			if (nameFile.contains(fileName) && nameFile.contains(kieuFile)) {
 				System.out.println(nameFile);
 //				System.out.println(kieuFile);
 				URL urlForGetRequest = new URL(
@@ -262,17 +261,15 @@ public class Download {
 					out.close();
 				}
 				System.out.println("down file thanh cong");
-//				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
-//				System.out.println("");
-//
-//				String query = "INSERT INTO logs(time_download, status,id_config) VALUES(?,?,?)";
-//				PreparedStatement pre = connectionDB1.prepareStatement(query);
-//
-//				pre.setDate(1, date);
-//				pre.setString(2, "OK");
-//				pre.setInt(id_config, 3);
-//				pre.execute();
-//				System.out.println("OKE");
+				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
+				System.out.println("");
+
+				String query = "INSERT INTO logs(file_name) VALUES(?)";
+				PreparedStatement pre = connectionDB1.prepareStatement(query);
+
+				pre.setString(1, nameFile);
+				pre.execute();
+				System.out.println("OKE");
 			}
 		}
 	}
@@ -294,35 +291,35 @@ public class Download {
 		}
 	}
 
-	public static void insertLog(MyConfig myConfig, String status) {
-		PreparedStatement statement = null;
-		int id_log = myConfig.getId_log();
-
-		String sql = "UPDATE  logs SET time_download= current_timestamp(),status ='" + status + "' WHERE id = "
-				+ id_log;
-		Connection connection = GetConnection.getConnection("control");
-		try {
-			statement = connection.prepareStatement(sql);
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			try {
-
-				if (statement != null) {
-					statement.close();
-				}
-				if (connection != null) {
-					connection.close();
-				}
-
-			} catch (SQLException e) {
-				System.out.println("Khong the tao bang");
-				e.printStackTrace();
-			}
-		}
-	}
+//	public static void insertLog(MyConfig myConfig, String status) {
+//		PreparedStatement statement = null;
+//		int id_log = myConfig.getId_log();
+//
+//		String sql = "UPDATE  logs SET time_download= current_timestamp(),status ='" + status + "' WHERE id = "
+//				+ id_log;
+//		Connection connection = GetConnection.getConnection("control");
+//		try {
+//			statement = connection.prepareStatement(sql);
+//			statement.executeUpdate();
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} finally {
+//			try {
+//
+//				if (statement != null) {
+//					statement.close();
+//				}
+//				if (connection != null) {
+//					connection.close();
+//				}
+//
+//			} catch (SQLException e) {
+//				System.out.println("Khong the tao bang");
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 	public static void main(String[] args) throws Exception {
 		Download dw = new Download("http://drive.ecepvn.org:5000/");
