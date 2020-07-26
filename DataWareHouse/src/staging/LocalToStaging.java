@@ -27,7 +27,7 @@ public class LocalToStaging {
 	static final String EXT_EXCEL = ".xlsx";
 	public LocalToStaging(int id_config) {
 		this.id_config = id_config;
-		sendMail = new SendMailSSL();
+		
 	}
 
 	public int getId_config() {
@@ -66,27 +66,11 @@ public class LocalToStaging {
 		LocalToStaging dw = new LocalToStaging(id);
 dw.run();
 	}
-
 	public void ExtractToDB(ExtracData dp) throws ClassNotFoundException, SQLException {
 		List<MyConfig> listConf = dp.getCdb().loadAllConfig(this.id_config);
 //		List<Log> listLog = dp.getCdb().getLogsWithStatus(this.status, this.id_config);
 		GetConnection conectControl = new GetConnection();
 		Connection connectionSta = conectControl.getConnection("staging");
-		if (connectionSta == null) {
-			try {
-				connectionSta.close();
-				sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE", "KhÃ´ng thá»ƒ káº¿t ná»‘i tá»›i database Control_data");
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		} else {
-			// Náº¾U Káº¾T Ná»�I THÃ€NH CÃ”NG --> 2.Láº¤Y Dá»® LIá»†U CÃ“ STATUS ='TR'--> 3.TRáº¢ Vá»€ Má»˜T
-			// RESULTSET --> 4.1 LÆ¯U LIá»†U TRONG LIST VÃ€ Ä�Ã“NG Káº¾T Ná»�I
-			List<MyConfig> listConfig = loadAllConfig(connectionSta, id_config);
-			if (listConfig.isEmpty()) {
-				System.out.println("There is no data to load");
-			}
-
 		// Lấy các trường trong các dòng config ra:
 		for (MyConfig config : listConf) {
 			String staging_table = config.getStaging_table();
@@ -96,6 +80,7 @@ dw.run();
 			String extention = "";
 			System.out.println(staging_table);
 			System.out.println(folder_download);
+			
 			if (dp.getCdb().checkTableExist(connectionSta, staging_table, "staging") == 0) {
 				System.out.println();
 				dp.getCdb().createTable(staging_table, field_name);
@@ -137,12 +122,8 @@ dw.run();
 						// load dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
 						if (dp.insertValuesToBD(field_name, staging_table, values)) {
 							status = "TR";
-							sendMail.sendMail("[SUCCESS] LOAD TO STAGING",config.getStaging_table + " update " + status + " TR");
 							// update cái log lại với status là TR
 							dp.getCdb().updateLog(status,file_name);
-							
-							
-							
 							System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
 							//ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
 							try {
@@ -157,7 +138,6 @@ dw.run();
 						} else {
 							// Nếu mà bị lỗi thì update log là state=Not TR
 							status = "Not TR";
-							sendMail.sendMail("[ERROR] LOAD TO STAGING",config.getStaging_table + " update " + status + " Not TR");
 							dp.getCdb().updateLog(status, file_name);
 
 						}

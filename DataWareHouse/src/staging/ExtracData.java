@@ -70,6 +70,7 @@ public class ExtracData {
 		for (int j = 0; j < countToken; j++) {
 			String token = stoken.nextToken();
 			if (Pattern.matches(NUMBER_REGEX, token)) {
+				//
 				lines += (j == countToken - 1) ? token.trim() + ")," : token.trim() + ",";
 			} else {
 				lines += (j == countToken - 1) ? "'" + token.trim() + "')," : "'" + token.trim() + "',";
