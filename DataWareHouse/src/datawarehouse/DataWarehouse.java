@@ -100,24 +100,25 @@ public class DataWarehouse {
 		}
 
 	}
-	private void truncateTable(Connection connection,MyConfigDataWare myConfig) {
+
+	private void truncateTable(Connection connection, MyConfigDataWare myConfig) {
 		PreparedStatement statementTruncate;
 		try {
-			statementTruncate = connection.prepareStatement("TRUNCATE TABLE "+myConfig.getStaging_table());
+			statementTruncate = connection.prepareStatement("TRUNCATE TABLE " + myConfig.getStaging_table());
 			statementTruncate.execute();
-			
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		System.out.println("TRUNCATED "+ myConfig.getStaging_table());
+
+		System.out.println("TRUNCATED " + myConfig.getStaging_table());
 	}
-	private ArrayList<MyConfigDataWare> getValuesFromConfig(Connection connection, int id)  {
+
+	private ArrayList<MyConfigDataWare> getValuesFromConfig(Connection connection, int id) {
 		ArrayList<MyConfigDataWare> listConfig = new ArrayList<MyConfigDataWare>();
 		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,conf.number_cols,conf.datawarehouse_table,conf.cols_date, conf.field_name_dwh,"
-				+ "conf.number_cols_dwh \r\n"
-				+ "FROM config conf join logs log on conf.id = log.id_config\r\n"
+				+ "conf.number_cols_dwh \r\n" + "FROM config conf join logs log on conf.id = log.id_config\r\n"
 				+ "WHERE   log.status = 'TR' AND log.id_config=" + id + ";";
 		MyConfigDataWare myConfig = null;
 		PreparedStatement statement = null;
@@ -157,7 +158,7 @@ public class DataWarehouse {
 				}
 				if (connection != null) {
 //					connection.close();
-					
+
 				}
 
 			} catch (SQLException e) {
@@ -176,17 +177,31 @@ public class DataWarehouse {
 		int rows_update_datawarehouse = 0;
 		
 		
+		
 		String sqlSelectStaging = "SELECT ";
 		String field_dwh[] = config.getField_name_dwh().split(",");
+		boolean isDate_Dim = false;
+		
 		for (int i = 0; i < field_dwh.length; i++) {
-			if(i==field_dwh.length-1) {
-				sqlSelectStaging += field_dwh[i] ;
+			if(field_dwh[i].equalsIgnoreCase("sk_date_dim"))  {
+				cols =cols -1;
+				isDate_Dim = true;
+				continue;
+			} else if(i == field_dwh.length - 1) {
+				sqlSelectStaging += field_dwh[i];
 			}else {
-				sqlSelectStaging += field_dwh[i]+"," ;
+				if(field_dwh[i+1].equalsIgnoreCase("sk_date_dim")&&(i+1)==field_dwh.length-1) {
+					sqlSelectStaging += field_dwh[i];
+				}else {
+					sqlSelectStaging += field_dwh[i] + ",";
+				}
+				
 			}
-			
+
 		}
-		 sqlSelectStaging += " FROM " + config.getStaging_table();
+		
+
+		sqlSelectStaging += " FROM " + config.getStaging_table();
 
 		PreparedStatement statement = null;
 		ResultSet result = null;
@@ -202,7 +217,7 @@ public class DataWarehouse {
 						+ field_dwh[0] + "='";
 				ResultSetMetaData rsMeta = (ResultSetMetaData) result.getMetaData();
 				primaryKeySta = result.getString(1);
-				if(primaryKeySta==null||primaryKeySta.equals("")) {
+				if (primaryKeySta == null || primaryKeySta.equals("")) {
 					continue;
 				}
 
@@ -226,15 +241,16 @@ public class DataWarehouse {
 						while (resutlSetGet.next()) {
 
 							for (int i = 2; i <= cols; i++) {
-								// SO SÁNH GIỮA CÁC DÒNG CỦA 2 BẢNG
+								// SO SÁNH GIỮA CÁC DÒNG DATE CỦA 2 BẢNG
 								if (reMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
-									if (!formatDate(result.getString(i)).toString()
-											.equalsIgnoreCase(resutlSetGet.getDate(i).toString())) {
+									String date = formatDate(result.getString(i));
+									if (!date.equalsIgnoreCase(resutlSetGet.getDate(i).toString())) {
 										String sqlUpadte = "";
+										int sk_date_dim = getIdDateDim(date, connect_warehouse);
 
 										sqlUpadte = "Update " + config.getDatawarehouse_table() + " SET "
-												+ reMeta.getColumnName(i) + "='" + formatDate(result.getString(i))
-												+ "' WHERE " + reMeta.getColumnName(1) + "=" + result.getInt(1) + "";
+												+ reMeta.getColumnName(i) + "='" + formatDate(result.getString(i))+"',sk_date_dim="+sk_date_dim
+												+ " WHERE " + reMeta.getColumnName(1) + "=" + result.getInt(1) + "";
 
 										System.out.println(sqlUpadte);
 										PreparedStatement statementUpdate = connect_warehouse
@@ -267,20 +283,43 @@ public class DataWarehouse {
 						}
 
 					} else {
+						//NẾU SK CHƯA TỒN TẠI THÌ INSERT VÀO
 						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta
 								+ " Data does not exist in the table" + config.getDatawarehouse_table());
+					
+						String date = "";
+						int sk_date_dim =-1;
 						String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 						for (int i = 1; i <= cols; i++) {
 							if (result.getString(1) == null) {
 								continue;
+								//KIỂM TRA NẾU LÀ CỘT DATE CẦN FORMAT VÀ LẤY ID DATEDIM
+							} else if (rsMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
+								date = formatDate(result.getString(i));
+								sk_date_dim = getIdDateDim(date, connect_warehouse);
+								if (i == cols) {
+									sqlInsert += "'" + date + "');";
+								} else {
+									sqlInsert += "'" + date + "',";
 
+								}
+								//INSERT SK_date_dim VÀO BẢNG
+							} else if (i == 1) {
+								sqlInsert += "" + result.getString(i) + ",";
 							} else if (i == cols) {
-								sqlInsert += "'" + result.getString(i) + "');";
+								if(isDate_Dim) {
+									sqlInsert += "'" + result.getString(i) + "',";
+									sqlInsert += "" + sk_date_dim + ");";
+								}else {
+									sqlInsert += "'" + result.getString(i) + "');";
+								}
+								
 							} else {
 								sqlInsert += "'" + result.getString(i) + "',";
 							}
 
 						}
+						
 						statementWareHouse = connect_warehouse.prepareStatement(sqlInsert);
 //						 INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
 						statementWareHouse.executeUpdate();
@@ -338,17 +377,28 @@ public class DataWarehouse {
 		int cols = config.getNumber_cols_dwh();
 		String sqlSelectStaging = "SELECT ";
 		String field_dwh[] = config.getField_name_dwh().split(",");
-		for (int i = 0; i < field_dwh.length; i++) {
-			if(i==field_dwh.length-1) {
-				sqlSelectStaging += field_dwh[i] ;
-			}else {
-				sqlSelectStaging += field_dwh[i]+"," ;
-			}
-			
-		}
-		 sqlSelectStaging += " FROM " + config.getStaging_table();
-
+		boolean isDate_Dim = false;
 		
+		
+		for (int i = 0; i < field_dwh.length; i++) {
+			if(field_dwh[i].equalsIgnoreCase("sk_date_dim"))  {
+				cols =cols -1;
+				isDate_Dim = true;
+				continue;
+			} else if(i == field_dwh.length - 1) {
+				sqlSelectStaging += field_dwh[i];
+			}else {
+				if(field_dwh[i+1].equalsIgnoreCase("sk_date_dim")&&(i+1)==field_dwh.length-1) {
+					sqlSelectStaging += field_dwh[i];
+				}else {
+					sqlSelectStaging += field_dwh[i] + ",";
+				}
+				
+			}
+
+		}
+		sqlSelectStaging += " FROM " + config.getStaging_table();
+
 		PreparedStatement statement = null;
 		ResultSet result = null;
 		PreparedStatement statementWareHouse = null;
@@ -360,21 +410,33 @@ public class DataWarehouse {
 			result = statement.executeQuery();
 			ResultSetMetaData resMetaData = (ResultSetMetaData) result.getMetaData();
 			while (result.next()) {
+				String date ="";
+				int sk_date_dim=-1;
 				String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 				for (int i = 1; i <= cols; i++) {
 					if (result.getString(1) == null) {
 						continue;
+						//KIỂM TRA NẾU LÀ CỘT DATE CẦN FORMAT VÀ LẤY ID DATEDIM
 					} else if (resMetaData.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
+						date = formatDate(result.getString(i));
+						sk_date_dim = getIdDateDim(date, connect_warehouse);
 						if (i == cols) {
-							sqlInsert += "'" + formatDate(result.getString(i)) + "');";
+							sqlInsert += "'" + date + "');";
 						} else {
-							sqlInsert += "'" + formatDate(result.getString(i)) + "',";
+							sqlInsert += "'" + date + "',";
 
 						}
+						//INSERT SK_date_dim VÀO BẢNG
 					} else if (i == 1) {
 						sqlInsert += "" + result.getString(i) + ",";
 					} else if (i == cols) {
-						sqlInsert += "'" + result.getString(i) + "');";
+						if(isDate_Dim) {
+							sqlInsert += "'" + result.getString(i) + "',";
+							sqlInsert += "" + sk_date_dim + ");";
+						}else {
+							sqlInsert += "'" + result.getString(i) + "');";
+						}
+						
 					} else {
 						sqlInsert += "'" + result.getString(i) + "',";
 					}
@@ -393,8 +455,6 @@ public class DataWarehouse {
 					+ config.getStaging_table() + " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
 			// 11. CẬP NHẬT STATUS='SUCCESS'
 			insertLog(config, "SUCCESS", 0);
-			
-			
 
 		} catch (SQLException e) {
 
@@ -461,6 +521,8 @@ public class DataWarehouse {
 
 	public static boolean createTable(MyConfigDataWare config, Connection connectionStaging) {
 		boolean isCreated = false;
+		
+		
 		PreparedStatement statement = null;
 		ResultSet res = null;
 		// Tạo ra một mảng từng field trong table
@@ -474,10 +536,26 @@ public class DataWarehouse {
 			if (i == 0) {
 				sql += fields[i] + " INT PRIMARY KEY,";
 			} else if (i == fields.length - 1) {
-				sql += fields[i] + " varchar(225));";
+				if(fields[i].equalsIgnoreCase(config.getCols_date())) {
+					sql += fields[i] + " date);";
+				}else
+				if(fields[i].equalsIgnoreCase("sk_date_dim")) {
+					sql += fields[i] + " int);";
+				}else {
+					sql += fields[i] + " varchar(225));";
+				}
+				
 
 			} else {
-				sql += fields[i] + " varchar(255),";
+				if(fields[i].equalsIgnoreCase(config.getCols_date())) {
+					sql += fields[i] + " date,";
+				}else
+				if(fields[i].equalsIgnoreCase("sk_date_dim")) {
+					sql += fields[i] + " int,";
+				}else {
+					sql += fields[i] + " varchar(255),";
+				}
+				
 			}
 		}
 
@@ -550,10 +628,27 @@ public class DataWarehouse {
 			result = date.toString();
 		} catch (ParseException e) {
 			result = resDate;
-			e.printStackTrace();
+			System.out.println("Can't format date");
 		}
 		return result;
 
+	}
+	public int getIdDateDim(String date,Connection connec_DatWare) {
+		String sql = "Select Date_SK\r\n" + 
+				"from date_dim d\r\n" + 
+				"where d.full_date = '"+date+"';";
+		int date_SK = -1;
+		try {
+			PreparedStatement statement = connec_DatWare.prepareStatement(sql);
+			ResultSet res = statement.executeQuery();
+			while(res.next()) {
+				date_SK =res.getInt(1);
+			}
+			return date_SK;
+		} catch (SQLException e) {
+			System.out.println("WARRING: Wrong date format");
+		}
+		return date_SK;
 	}
 
 	public static void main(String[] args) {
