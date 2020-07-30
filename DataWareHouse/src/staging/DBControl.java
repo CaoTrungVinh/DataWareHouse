@@ -80,7 +80,11 @@ public class DBControl {
 		return listConfig;
 	}
 
+<<<<<<< HEAD
 	// Phương thức lấy một dòng log đầu tiên trong table log có state = ER
+=======
+	// Phương thức lấy một dòng log đầu tiên trong table log có state = ER và theo dòng config 
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 	public ArrayList<Log> getLogsWithStatus(String condition, int id_config) throws SQLException {
 		ArrayList<Log> listLog = new ArrayList<Log>();
 		Log log = null;
@@ -98,7 +102,10 @@ public class DBControl {
 				log.setId_config(rs.getInt("id_config"));
 				listLog.add(log);
 			}
+<<<<<<< HEAD
 //		ps.close();
+=======
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 		return listLog;
 	}
 
@@ -200,4 +207,8 @@ public class DBControl {
 		}
 	}
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539

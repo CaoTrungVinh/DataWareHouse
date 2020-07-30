@@ -43,12 +43,20 @@ public class Download {
 
 	static String url_mysql = "jdbc:mysql://localhost/control?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	static String userName_mysql = "root";
+<<<<<<< HEAD
 	static String passWord_mysql = "123456";
+=======
+	static String passWord_mysql = "";
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 
 	long millis = System.currentTimeMillis();
 	java.sql.Date date = new java.sql.Date(millis);
 
+<<<<<<< HEAD
 	public Download(String url,int i) throws SQLException {
+=======
+	public Download(String url) throws SQLException {
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 		this.url = url;
 		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
 		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
@@ -58,7 +66,11 @@ public class Download {
 		loadProps(i);
 	}
 
+<<<<<<< HEAD
 	private void loadProps(int i) throws SQLException {
+=======
+	private void loadProps() throws SQLException {
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 		// assign db parameters
 //		this.login_endpoint = "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&session=FileStation&format=cookies";
 
@@ -66,7 +78,11 @@ public class Download {
 		System.out.println("ok");
 		ResultSet rs;
 		Statement stmt = connectionDB1.createStatement();
+<<<<<<< HEAD
 		rs = stmt.executeQuery("SELECT * FROM config where id=" + i);
+=======
+		rs = stmt.executeQuery("SELECT * FROM config");
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 
 		System.out.println(username + " " + password);
 
@@ -262,10 +278,12 @@ public class Download {
 					in.close();
 					out.close();
 				}
+				MyConfigDataWare myConfig;
 				System.out.println("down file thanh cong");
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
 
+<<<<<<< HEAD
 				String query = "INSERT INTO logs(file_name, status, time_download, id_config) VALUES(?,?,?,?)";
 				PreparedStatement pre = connectionDB1.prepareStatement(query);
 
@@ -273,6 +291,12 @@ public class Download {
 				pre.setString(2, "ER");
 				pre.setString(3, new Timestamp(System.currentTimeMillis()).toString().substring(0, 19));
 				pre.setInt(4, 1);
+=======
+				String query = "INSERT INTO logs(file_name) VALUES(?)";
+				PreparedStatement pre = connectionDB1.prepareStatement(query);
+
+				pre.setString(1, nameFile);
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 				pre.execute();
 				System.out.println("OKE");
 
@@ -299,6 +323,7 @@ public class Download {
 //				noticeDownLoad.append(listFile.get(i) + " \n");
 
 			}
+<<<<<<< HEAD
 		}
 	}
 
@@ -333,6 +358,44 @@ public class Download {
 
 	public static void main(String[] args) throws Exception {
 		Download dw = new Download("http://drive.ecepvn.org:5000/",1);
+=======
+		}
+	}
+
+//	public static void insertLog(MyConfig myConfig, String status) {
+//		PreparedStatement statement = null;
+//		int id_log = myConfig.getId_log();
+//
+//		String sql = "UPDATE  logs SET time_download= current_timestamp(),status ='" + status + "' WHERE id = "
+//				+ id_log;
+//		Connection connection = GetConnection.getConnection("control");
+//		try {
+//			statement = connection.prepareStatement(sql);
+//			statement.executeUpdate();
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} finally {
+//			try {
+//
+//				if (statement != null) {
+//					statement.close();
+//				}
+//				if (connection != null) {
+//					connection.close();
+//				}
+//
+//			} catch (SQLException e) {
+//				System.out.println("Khong the tao bang");
+//				e.printStackTrace();
+//			}
+//		}
+//	}
+
+	public static void main(String[] args) throws Exception {
+		Download dw = new Download("http://drive.ecepvn.org:5000/");
+//		Download dw = new Download("/ECEP/song.nguyen/DW_2020/");
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 		dw.login();
 		dw.download();
 	}
@@ -342,7 +405,11 @@ public class Download {
 			login();
 //			getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", noticeLogin.toString());
 
+<<<<<<< HEAD
 			download();
+=======
+			downloadFile();
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 //			getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

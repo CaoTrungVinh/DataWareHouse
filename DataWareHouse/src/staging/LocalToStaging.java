@@ -27,6 +27,10 @@ public class LocalToStaging {
 	static final String EXT_EXCEL = ".xlsx";
 	public LocalToStaging(int id_config) {
 		this.id_config = id_config;
+<<<<<<< HEAD
+=======
+		
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 	}
 
 	public int getId_config() {
@@ -65,7 +69,10 @@ public class LocalToStaging {
 		LocalToStaging dw = new LocalToStaging(id);
 dw.run();
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 	public void ExtractToDB(ExtracData dp) throws ClassNotFoundException, SQLException {
 		List<MyConfig> listConf = dp.getCdb().loadAllConfig(this.id_config);
 //		List<Log> listLog = dp.getCdb().getLogsWithStatus(this.status, this.id_config);
@@ -87,8 +94,12 @@ dw.run();
 			} else {
 				System.out.println("Bảng " + staging_table + " đã tồn tại sãn sàng insert dữ liệu!!!!");
 			}
+<<<<<<< HEAD
 			// Lấy các trường có trong dòng log đầu tiên có state=ER;
 			
+=======
+			// Lấy các trường có trong dòng log đầu tiên có status=ER ;
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 			ArrayList<Log> listLog = dp.getCdb().getLogsWithStatus(this.status, this.id_config);
 			
 			for (Log log : listLog) {
@@ -120,6 +131,7 @@ dw.run();
 						String table = "logs";
 						String status;
 						int config_id = config.getId();
+<<<<<<< HEAD
 						// time
 //						String time_staging = new Timestamp(System.currentTimeMillis().toString.subString ) ;
 						// thì mình ghi dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
@@ -129,6 +141,13 @@ dw.run();
 							dp.getCdb().updateLog(status,file_name);
 							
 							
+=======
+						// load dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
+						if (dp.insertValuesToBD(field_name, staging_table, values)) {
+							status = "TR";
+							// update cái log lại với status là TR
+							dp.getCdb().updateLog(status,file_name);
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 							System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
 							//ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
 							try {
@@ -141,7 +160,11 @@ dw.run();
 							dataWarehouse.run();
 
 						} else {
+<<<<<<< HEAD
 							// Nếu mà bị lỗi thì update log là state=Not TR và và ghi file vào thư mục error
+=======
+							// Nếu mà bị lỗi thì update log là state=Not TR
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 							status = "Not TR";
 							dp.getCdb().updateLog(status, file_name);
 
@@ -156,6 +179,7 @@ dw.run();
 		}
 	}
 
+<<<<<<< HEAD
 	// Phương thức lấy ra thời gian hiện tạo để ghi vào log:
 	public String getCurrentTime() {
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -164,3 +188,8 @@ dw.run();
 	}
 	
 }
+=======
+
+	
+}
+>>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
