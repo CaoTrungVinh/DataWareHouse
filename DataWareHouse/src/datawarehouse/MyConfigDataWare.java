@@ -1,4 +1,4 @@
-package model;
+package datawarehouse;
 
 public class MyConfigDataWare {
 	private int id;

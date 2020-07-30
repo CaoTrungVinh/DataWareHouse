@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -20,6 +21,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import connections.GetConnection;
 import mail.SendMailSSL;
 
 public class Download {
@@ -42,45 +44,45 @@ public class Download {
 	static String url_mysql = "jdbc:mysql://localhost/control?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	static String userName_mysql = "root";
 	static String passWord_mysql = "123456";
-	
-	long millis=System.currentTimeMillis();  
-	java.sql.Date date=new java.sql.Date(millis); 
-	
-	public Download(String url) throws SQLException {
+
+	long millis = System.currentTimeMillis();
+	java.sql.Date date = new java.sql.Date(millis);
+
+	public Download(String url,int i) throws SQLException {
 		this.url = url;
 		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
 		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
 		this.id_config = 0;
 		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
 		this.mail = new SendMailSSL();
-		loadProps();
+		loadProps(i);
 	}
 
-	private void loadProps() throws SQLException {
-			// assign db parameters
-			this.login_endpoint = "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&session=FileStation&format=cookies";
+	private void loadProps(int i) throws SQLException {
+		// assign db parameters
+//		this.login_endpoint = "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&session=FileStation&format=cookies";
 
-			Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
-			System.out.println("ok");
-			ResultSet rs;
-			Statement stmt = connectionDB1.createStatement();
-			rs = stmt.executeQuery("SELECT * FROM config");
+		Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
+		System.out.println("ok");
+		ResultSet rs;
+		Statement stmt = connectionDB1.createStatement();
+		rs = stmt.executeQuery("SELECT * FROM config where id=" + i);
 
-			System.out.println(username + " " + password);
+		System.out.println(username + " " + password);
 
-			while (rs.next()) {
-				this.id_config = rs.getInt("id");
-				url = rs.getString("source_host");
-				username = rs.getString("user_name");
-				password = rs.getString("password");
-				listFile = rs.getString("list_file");
-				folder_download = rs.getString("folder_download");
-				kieuFile = rs.getString("extension_file");
-				fileName = rs.getString("file_name");
-			}
-			System.out.println(url + " " +username + " " + password + " " + listFile + " " + folder_download + " " + kieuFile + " " + fileName );
+		while (rs.next()) {
+			this.id_config = rs.getInt("id");
+			url = rs.getString("source_host");
+			username = rs.getString("user_name");
+			password = rs.getString("password");
+			listFile = rs.getString("list_file");
+			folder_download = rs.getString("folder_download");
+			kieuFile = rs.getString("extension_file");
+			fileName = rs.getString("file_name");
+		}
+		System.out.println(url + " " + username + " " + password + " " + listFile + " " + folder_download + " "
+				+ kieuFile + " " + fileName);
 
-		
 	}
 
 	public String getFolderPath() {
@@ -115,11 +117,11 @@ public class Download {
 		// url
 		noticeLogin.append("\nBạn vùa mới đăng nhật vào hệ thống web :" + new Date() + " \n");
 		System.out.println("-------------------Infor Connection -------------------");
-		login_endpoint += "&account=" + username + "&passwd=" + password;
-		URL urlForGetRequest = new URL(url + login_endpoint);
+//		login_endpoint += "&account=" + username + "&passwd=" + password;
+//		URL urlForGetRequest = new URL(url + login_endpoint);
 
-//		URL urlForGetRequest = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
-//				+ username + "&passwd=" + password + "&session=FileStation&format=cookie");
+		URL urlForGetRequest = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
+				+ username + "&passwd=" + password + "&session=FileStation&format=cookie");
 		HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
 		conection.setRequestMethod("GET");
 		int responseCode = conection.getResponseCode();
@@ -159,7 +161,7 @@ public class Download {
 		if (sid != null) {
 
 			URL urlForGetRequest = new URL(url + "/webapi/entry.cgi?api=SYNO.FileStation.List&version=1&method=list"
-					+ "&folder_path=" + listFile  + "&_sid=" + sid);
+					+ "&folder_path=" + listFile + "&_sid=" + sid);
 			HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
 			conection.setRequestMethod("GET");
 			int responseCode = conection.getResponseCode();
@@ -190,7 +192,6 @@ public class Download {
 		return result;
 	}
 
-	
 	public String downloadFile() throws Exception {
 		if (sid != null) {
 			String src = listFile + "/" + fileName;
@@ -217,10 +218,10 @@ public class Download {
 				System.out.println("down file thanh cong");
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
-				
+
 				String query = "INSERT INTO logs(time_download, status, id_config) VALUES(?,?,?)";
 				PreparedStatement pre = connectionDB1.prepareStatement(query);
-				
+
 				pre.setDate(1, date);
 				pre.setString(2, "OK");
 				pre.setInt(3, id_config);
@@ -236,25 +237,23 @@ public class Download {
 	}
 
 	public void download() throws Exception {
-//		File desFlie = new File(des);
 		LinkedList<String> lisFile = listFiles();
 		for (int i = 0; i < lisFile.size(); i++) {
 			String srcNameFile = lisFile.get(i);
 			String nameFile = srcNameFile.substring(srcNameFile.lastIndexOf("/") + 1);
-			if (nameFile.contains(kieuFile)) {
+			if (nameFile.contains(fileName) && nameFile.contains(kieuFile)) {
 				System.out.println(nameFile);
 //				System.out.println(kieuFile);
 				URL urlForGetRequest = new URL(
 						url + "webapi/entry.cgi?api=SYNO.FileStation.Download&version=1&method=download&mode=open"
-								+ "&path=" + listFile + "/"+ srcNameFile + "&_sid=" + sid);
+								+ "&path=" + listFile + "/" + srcNameFile + "&_sid=" + sid);
 				HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
 				conection.setRequestMethod("GET");
 				int responseCode = conection.getResponseCode();
 				if (responseCode == HttpURLConnection.HTTP_OK) {
 					InputStream in = new BufferedInputStream((conection.getInputStream()));
-//				InputStream in = new BufferedInputStream(new FileInputStream(sFile));
 					BufferedOutputStream out = new BufferedOutputStream(
-							new FileOutputStream(folder_download  + nameFile));
+							new FileOutputStream(folder_download + nameFile));
 					int readData;
 					byte[] buff = new byte[1024];
 					while ((readData = in.read(buff)) > -1) {
@@ -266,20 +265,28 @@ public class Download {
 				System.out.println("down file thanh cong");
 				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 				System.out.println("");
-				
-				String query = "INSERT INTO logs(time_download, status,id_config) VALUES(?,?,?)";
+
+				String query = "INSERT INTO logs(file_name, status, time_download, id_config) VALUES(?,?,?,?)";
 				PreparedStatement pre = connectionDB1.prepareStatement(query);
-				
-				pre.setDate(1, date);
-				pre.setString(2, "OK");
-				pre.setInt(id_config, 3);
+
+				pre.setString(1, nameFile);
+				pre.setString(2, "ER");
+				pre.setString(3, new Timestamp(System.currentTimeMillis()).toString().substring(0, 19));
+				pre.setInt(4, 1);
 				pre.execute();
 				System.out.println("OKE");
+
+//				String sql = "UPDATE logs SET\n status='" + "OKE" + "',time_download = current_timestamp(),file_name ='"
+//						+ nameFile + "' \n WHERE id=" + id_config;
+//				Connection connection = GetConnection.getConnection("control");
+//				PreparedStatement statement = connection.prepareStatement(sql);
+//				statement.executeUpdate();
 			}
 		}
 	}
 
 	public void downloadAllFile(LinkedList<String> listFile, String folderPathDownload) throws Exception {
+
 		if (listFile.isEmpty()) {
 			noticeDownLoad.append("\nThere is no file to download, please check again ");
 			System.out.println("There is no file to download, please check again ");
@@ -292,23 +299,56 @@ public class Download {
 //				noticeDownLoad.append(listFile.get(i) + " \n");
 
 			}
-
 		}
 	}
-	public void run()  {
+
+	public static void insertLog(MyConfig myConfig, String status, String nameFile) {
+		PreparedStatement statement = null;
+		int id_log = myConfig.getId_log();
+
+		String sql = "UPDATE logs SET\n status='" + "OKE" + "',time_download = current_timestamp(),file_name ="
+				+ nameFile + " \n WHERE id=" + id_log;
+		Connection connection = GetConnection.getConnection("control");
+		try {
+			statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+
+				if (statement != null) {
+					statement.close();
+				}
+				if (connection != null) {
+//					connection.close();
+				}
+
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		Download dw = new Download("http://drive.ecepvn.org:5000/",1);
+		dw.login();
+		dw.download();
+	}
+
+	public void run() {
 		try {
 			login();
 //			getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", noticeLogin.toString());
-			
-			downloadFile();
+
+			download();
 //			getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 
 	}
-
 
 }

@@ -13,6 +13,7 @@ public class Run {
 		System.out.println("SELECTION: 1 - sinh vien, 2 - mon hoc,3 - dang ky, 4- lop hoc\nNhap config de RUN: ");
 		Scanner sc = new Scanner(System.in);
 		LocalToStaging staging = null;
+		Download dow =null;
 		String line = sc.nextLine();
 		int selection = 0;
 		try {
@@ -26,9 +27,9 @@ public class Run {
 		switch (selection) {
 		case  1:
 			//Download 
-//			System.out.println("\t\t\t DOWNLOAD");
+			System.out.println("\t\t\t DOWNLOAD");
 //			try {
-//				Download dow = new Download("http://drive.ecepvn.org:5000/");
+//				dow = new Download("http://drive.ecepvn.org:5000/",1);
 //				dow.run();
 //			} catch (SQLException e) {
 //				e.printStackTrace();
@@ -48,13 +49,14 @@ public class Run {
 			break;
 		case 2:
 			//Download 
-//			System.out.println("\t\t\t DOWNLOAD");
-//			try {
-//				Download dow = new Download("http://drive.ecepvn.org:5000/");
-//				dow.run();
-//			} catch (SQLException e) {
-//				e.printStackTrace();
-//			}	
+			//Download 
+			System.out.println("\t\t\t DOWNLOAD");
+			try {
+				dow = new Download("http://drive.ecepvn.org:5000/",2);
+				dow.run();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}	
 			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
 			//Staging
 			 staging = new LocalToStaging(2);
@@ -68,13 +70,14 @@ public class Run {
 			break;
 		case 3:
 			//Download 
-//			System.out.println("\t\t\t DOWNLOAD");
-//			try {
-//				Download dow = new Download("http://drive.ecepvn.org:5000/");
-//				dow.run();
-//			} catch (SQLException e) {
-//				e.printStackTrace();
-//			}	
+			//Download 
+			System.out.println("\t\t\t DOWNLOAD");
+			try {
+				dow = new Download("http://drive.ecepvn.org:5000/",3);
+				dow.run();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}	
 			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
 			//Staging
 			 staging = new LocalToStaging(3);
@@ -88,13 +91,13 @@ public class Run {
 			break;
 		case 4:
 			//Download 
-//			System.out.println("\t\t\t DOWNLOAD");
-//			try {
-//				Download dow = new Download("http://drive.ecepvn.org:5000/");
-//				dow.run();
-//			} catch (SQLException e) {
-//				e.printStackTrace();
-//			}	
+			System.out.println("\t\t\t DOWNLOAD");
+			try {
+				 dow = new Download("http://drive.ecepvn.org:5000/",4);
+				dow.run();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}	
 			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
 			//Staging
 			 staging = new LocalToStaging(4);
