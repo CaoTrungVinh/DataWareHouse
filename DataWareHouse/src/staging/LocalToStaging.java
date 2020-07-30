@@ -25,12 +25,10 @@ public class LocalToStaging {
 	static final String EXT_TEXT = ".txt";
 	static final String EXT_CSV = ".csv";
 	static final String EXT_EXCEL = ".xlsx";
+
 	public LocalToStaging(int id_config) {
 		this.id_config = id_config;
-<<<<<<< HEAD
-=======
-		
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
+
 	}
 
 	public int getId_config() {
@@ -67,12 +65,9 @@ public class LocalToStaging {
 		System.out.println("Nhập id config cần download: ");
 		int id = sc.nextInt();
 		LocalToStaging dw = new LocalToStaging(id);
-dw.run();
+		dw.run();
 	}
-<<<<<<< HEAD
 
-=======
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 	public void ExtractToDB(ExtracData dp) throws ClassNotFoundException, SQLException {
 		List<MyConfig> listConf = dp.getCdb().loadAllConfig(this.id_config);
 //		List<Log> listLog = dp.getCdb().getLogsWithStatus(this.status, this.id_config);
@@ -87,21 +82,17 @@ dw.run();
 			String extention = "";
 			System.out.println(staging_table);
 			System.out.println(folder_download);
-			
+
 			if (dp.getCdb().checkTableExist(connectionSta, staging_table, "staging") == 0) {
 				System.out.println();
 				dp.getCdb().createTable(staging_table, field_name);
 			} else {
 				System.out.println("Bảng " + staging_table + " đã tồn tại sãn sàng insert dữ liệu!!!!");
 			}
-<<<<<<< HEAD
 			// Lấy các trường có trong dòng log đầu tiên có state=ER;
-			
-=======
-			// Lấy các trường có trong dòng log đầu tiên có status=ER ;
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
+
 			ArrayList<Log> listLog = dp.getCdb().getLogsWithStatus(this.status, this.id_config);
-			
+
 			for (Log log : listLog) {
 				// Lấy file_name từ trong config ra
 				String file_name = log.getFile_name();
@@ -131,65 +122,53 @@ dw.run();
 						String table = "logs";
 						String status;
 						int config_id = config.getId();
-<<<<<<< HEAD
 						// time
 //						String time_staging = new Timestamp(System.currentTimeMillis().toString.subString ) ;
 						// thì mình ghi dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
 						if (dp.insertValuesToBD(field_name, staging_table, values)) {
 							status = "TR";
 							// update cái log lại, chuyển file đã extract xong vào thư mục success
-							dp.getCdb().updateLog(status,file_name);
-							
-							
-=======
-						// load dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
-						if (dp.insertValuesToBD(field_name, staging_table, values)) {
-							status = "TR";
-							// update cái log lại với status là TR
-							dp.getCdb().updateLog(status,file_name);
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
-							System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
-							//ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
-							try {
-								TimeUnit.SECONDS.sleep(3);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							DataWarehouse dataWarehouse = new DataWarehouse(id_config);
-							dataWarehouse.run();
-
-						} else {
-<<<<<<< HEAD
-							// Nếu mà bị lỗi thì update log là state=Not TR và và ghi file vào thư mục error
-=======
-							// Nếu mà bị lỗi thì update log là state=Not TR
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
-							status = "Not TR";
 							dp.getCdb().updateLog(status, file_name);
 
+							// load dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
+							if (dp.insertValuesToBD(field_name, staging_table, values)) {
+								status = "TR";
+								// update cái log lại với status là TR
+								dp.getCdb().updateLog(status, file_name);
+								System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
+								// ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
+								try {
+									TimeUnit.SECONDS.sleep(3);
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								DataWarehouse dataWarehouse = new DataWarehouse(id_config);
+								dataWarehouse.run();
+
+							} else {
+								// Nếu mà bị lỗi thì update log là state=Not TR và và ghi file vào thư mục error
+								// Nếu mà bị lỗi thì update log là state=Not TR
+								status = "Not TR";
+								dp.getCdb().updateLog(status, file_name);
+
+							}
 						}
+					} else {
+						System.out.println("Path not exists!!!");
+						return;
 					}
-				} else {
-					System.out.println("Path not exists!!!");
-					return;
 				}
 			}
-	
 		}
 	}
 
-<<<<<<< HEAD
 	// Phương thức lấy ra thời gian hiện tạo để ghi vào log:
 	public String getCurrentTime() {
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		return dtf.format(now);
-	}
-	
-}
-=======
 
-	
+	}
+
 }
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539

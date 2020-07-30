@@ -70,10 +70,7 @@ public class ExtracData {
 		for (int j = 0; j < countToken; j++) {
 			String token = stoken.nextToken();
 			if (Pattern.matches(NUMBER_REGEX, token)) {
-<<<<<<< HEAD
-=======
 				//
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 				lines += (j == countToken - 1) ? token.trim() + ")," : token.trim() + ",";
 			} else {
 				lines += (j == countToken - 1) ? "'" + token.trim() + "')," : "'" + token.trim() + "',";
@@ -97,7 +94,6 @@ public class ExtracData {
 			if (line.indexOf("\t") != -1) {
 				delim = "\t";
 			}
-<<<<<<< HEAD
 			// Kiểm tra xem tổng số field trong file có đúng format hay không
 			// (11 trường)
 //			if (new StringTokenizer(line, delim).countTokens() != count_field) {
@@ -105,9 +101,7 @@ public class ExtracData {
 //				return null;
 //			}
 			// STT|Mã sinh viên|Họ lót|Tên|...-> line.split(delim)[0]="STT"
-=======
 			// Kiểm tra xem tổng số field trong file có đúng format hay không (11 trường)
->>>>>>> ffc4cef42fa5219cc32b63529592b5cf5c84e539
 			// không phải số nên là header -> bỏ qua line
 			// Kiểm tra xem có phần header hay không
 			if (Pattern.matches(NUMBER_REGEX, line.split(delim)[0])) {
