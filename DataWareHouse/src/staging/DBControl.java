@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 public class DBControl {
-	private String control_dbname;
-	private String staging_dbname;
-	private String table_name;
-	private PreparedStatement pst = null;
-	private ResultSet rs = null;
+	private String control_dbname;//database control
+	private String staging_dbname;// database staging
+	private String table_name;// tên bảng cần dùng
+	private PreparedStatement pst = null;//
+	private ResultSet rs = null;//
 	private String sql;
 
 	public DBControl(String db_name, String table_name, String staging_dbname) {
@@ -55,11 +55,13 @@ public class DBControl {
 //phương thức lấy các thuộc tính của bảng config
 	public static List<MyConfig> loadAllConfig(int condition) throws ClassNotFoundException, SQLException {
 		List<MyConfig> listConfig = new ArrayList<MyConfig>();
+//	 thực thi câu select SQL, trả về 1 đối tượng ResultSet để chứa dòng config thỏa mãn câu select.
 		String sql = "select * from config where id= ?";
 		Connection con = GetConnection.getConnection("control");
 		PreparedStatement ps = con.prepareStatement(sql);
 		ps.setInt(1, condition);
 		ResultSet rs = ps.executeQuery();
+//		Lay du lieu tu Result Set
 		while (rs.next()) {
 			MyConfig config = new MyConfig();
 			config.setId(rs.getInt("id"));
@@ -80,12 +82,13 @@ public class DBControl {
 		return listConfig;
 	}
 
-	// Phương thức lấy một dòng log đầu tiên trong table log có state = ER
-	// Phương thức lấy một dòng log đầu tiên trong table log có state = ER và theo dòng config 
+	// Phương thức lấy các thuộc tính config với status = ER và theo dòng config của nó 
 	public ArrayList<Log> getLogsWithStatus(String condition, int id_config) throws SQLException {
 		ArrayList<Log> listLog = new ArrayList<Log>();
 		Log log = null;
+		//
 		Connection conn = GetConnection.getConnection("control");
+//		 thực thi câu select SQL, trả về 1 đối tượng ResultSet để chứa các dòng logs thỏa mãn câu select.
 		String selectLog = "select * from logs where status=? and id_config=?";
 		PreparedStatement ps = conn.prepareStatement(selectLog);
 		ps.setString(1, condition);
@@ -104,11 +107,12 @@ public class DBControl {
 	}
 
 	// Phương thức chèn giá trị vào bảng có trong db staging, giá trị có
-	// được từ quá trình đọc file (file .xlsx):
+	// được từ quá trình đọc file
 	public boolean insertValues(String field_name, String values, String staging_table) throws ClassNotFoundException {
+//		tạo ra một lớp StringTokenizer dựa trên chuỗi chỉ định và dấu phân cách.
 		StringTokenizer stoken = new StringTokenizer(values, "|");
 		while (stoken.hasMoreElements()) {
-			sql = "INSERT INTO " + staging_table + "(" + field_name + ") VALUES " + stoken.nextToken();
+			sql = "INSERT INTO " + staging_table + "(" + field_name + ") VALUES " + stoken.nextToken();//
 			System.out.println(sql);
 			try {
 				pst = GetConnection.getConnection("staging").prepareStatement(sql);
