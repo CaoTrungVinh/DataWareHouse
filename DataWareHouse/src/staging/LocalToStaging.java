@@ -1,14 +1,9 @@
 package staging;
 
-//import java.io.BufferedInputStream;
-//import java.io.BufferedOutputStream;
+
 import java.io.File;
-//import java.io.FileInputStream;
-//import java.io.FileOutputStream;
-//import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-//import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -18,17 +13,14 @@ import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
 import datawarehouse.DataWarehouse;
-
+import mail.SendMailSSL;
 public class LocalToStaging {
+	SendMailSSL sendMail = null;
 	private int id_config;
 	private String status;
-	static final String EXT_TEXT = ".txt";
-	static final String EXT_CSV = ".csv";
-	static final String EXT_EXCEL = ".xlsx";
-
 	public LocalToStaging(int id_config) {
 		this.id_config = id_config;
-
+		sendMail = new SendMailSSL();
 	}
 
 	public int getId_config() {
@@ -46,7 +38,6 @@ public class LocalToStaging {
 	public String getStatus() {
 		return status;
 	}
-
 	public void run() throws ClassNotFoundException, SQLException {
 		LocalToStaging dw = new LocalToStaging(1);
 		dw.setId_config(id_config);
@@ -89,67 +80,45 @@ public class LocalToStaging {
 			} else {
 				System.out.println("Bảng " + staging_table + " đã tồn tại sãn sàng insert dữ liệu!!!!");
 			}
-			// Lấy các trường có trong dòng log đầu tiên có state=ER;
-
+			// Lấy các trường có trong dòng log đầu tiên có state=ER với dòng config của nó
 			ArrayList<Log> listLog = dp.getCdb().getLogsWithStatus(this.status, this.id_config);
-
+//
 			for (Log log : listLog) {
-				// Lấy file_name từ trong config ra
+				// Lấy thuộc tính file_name từ trong logs
 				String file_name = log.getFile_name();
 				// đường dẫn chứa file download về
 				String sourceFile = folder_download + File.separator + file_name;
-				// Đếm số trường trong filedName ở trong bảng config
+				// Đếm số trường trong field_name ở trong bảng config
 				StringTokenizer str = new StringTokenizer(field_name, delim);
-				System.out.println(sourceFile);
 				File file = new File(sourceFile);
-				// Lấy cái đuôi file ra coi đó là kiểu file gì để xử lí đọc file
-				extention = file.getPath().endsWith(".xlsx") ? EXT_EXCEL
-						: file.getPath().endsWith(".txt") ? EXT_TEXT : EXT_CSV;
 				if (file.exists()) {
 					String values = "";
-					// Nếu file là .txt thì đọc file .txt
-					if (extention.equals(".txt")) {
-						values = dp.readValuesTXT(file, str.countTokens());
-						extention = ".txt";
-						// Nếu file là .xlsx thì đọc file .xlsx
-					} else if (extention.equals(".xlsx")) {
+					
 						values = dp.readValuesXLSX(file, str.countTokens());
-						extention = ".xlsx";
-					}
-					System.out.println(values);
-					// Nếu đọc được giá trị rồi
+						
+//					System.out.println(values);
+					// Nếu đọc được các các giá trị trong file
 					if (values != null) {
 						String table = "logs";
 						String status;
-						int config_id = config.getId();
-						// time
-//						String time_staging = new Timestamp(System.currentTimeMillis().toString.subString ) ;
-						// thì mình ghi dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
-						if (dp.insertValuesToBD(field_name, staging_table, values)) {
-							status = "TR";
-							// update cái log lại, chuyển file đã extract xong vào thư mục success
-							dp.getCdb().updateLog(status, file_name);
-
+						int config_id = config.getId();			
 							// load dữ liệu vô bảng, nếu mình ghi được dữ liệu vô bảng
 							if (dp.insertValuesToBD(field_name, staging_table, values)) {
 								status = "TR";
+								sendMail.sendMail("[SUCCESS] LOAD DATA TO STAGING",
+										staging_table + " update " + status + " TR");
 								// update cái log lại với status là TR
 								dp.getCdb().updateLog(status, file_name);
 								System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
 								// ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
-								try {
-									TimeUnit.SECONDS.sleep(3);
-								} catch (InterruptedException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
 								DataWarehouse dataWarehouse = new DataWarehouse(id_config);
-								dataWarehouse.run();
+								dataWarehouse.start();
 
 							} else {
-								// Nếu mà bị lỗi thì update log là state=Not TR và và ghi file vào thư mục error
-								// Nếu mà bị lỗi thì update log là state=Not TR
+								// Nếu mà bị lỗi thì update log là state=Not TR 
 								status = "Not TR";
+								sendMail.sendMail("[ERROR] LOAD DATA TO STAGING",
+										staging_table + " update " + status + " Not TR");
 								dp.getCdb().updateLog(status, file_name);
 
 							}
@@ -157,18 +126,10 @@ public class LocalToStaging {
 					} else {
 						System.out.println("Path not exists!!!");
 						return;
-					}
+//					}
 				}
 			}
 		}
-	}
-
-	// Phương thức lấy ra thời gian hiện tạo để ghi vào log:
-	public String getCurrentTime() {
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-		LocalDateTime now = LocalDateTime.now();
-		return dtf.format(now);
-
 	}
 
 }
