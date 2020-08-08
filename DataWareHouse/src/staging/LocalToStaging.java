@@ -39,16 +39,16 @@ public class LocalToStaging {
 		return status;
 	}
 	public void run() throws ClassNotFoundException, SQLException {
-		LocalToStaging dw = new LocalToStaging(1);
-		dw.setId_config(id_config);
-		dw.setStatus("ER");
+//		LocalToStaging dw = new LocalToStaging(1);
+		setId_config(id_config);
+		setStatus("ER");
 		ExtracData dp = new ExtracData();
 		DBControl cdb = new DBControl();
 		cdb.setStaging_dbname("staging");
 		cdb.setControl_dbname("control");
 		cdb.setTable_name("config");
 		dp.setCdb(cdb);
-		dw.ExtractToDB(dp);
+		ExtractToDB(dp);
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {

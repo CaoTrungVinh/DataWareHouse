@@ -22,12 +22,12 @@ public class DataWarehouse {
 		this.id_config = id_config;
 	}
 
-	// HÀM RUN
 	public void start() {
 		// 1. MỞ KẾT NỐI DATABASE Control_Data
 		Connection connect_control = GetConnection.getConnection("control");
 
-		// NẾU KẾT NỐI KHÔNG THÀNH CÔNG --> 2. ĐÓNG KẾT NỐI
+		// KIỂM TRA KẾT NỐI
+		// NHÁNH 1: NẾU KẾT NỐI KHÔNG THÀNH CÔNG --> 2. ĐÓNG KẾT NỐI
 		if (connect_control == null) {
 			try {
 				connect_control.close();
@@ -39,20 +39,20 @@ public class DataWarehouse {
 				e.printStackTrace();
 			}
 		} else {
-			// NẾU KẾT NỐI THÀNH CÔNG --> 2.LẤY DỮ LIỆU TỪ BẢNG CONFIG DỰA TRÊN ID MUỐN LẤY VÀ CÓ STATUS ='TR'
-			//TRẢ VỀ MỘT  RESULTSET --> 4.1 LƯU LIỆU VÀO MỘT CONFIG
+			// NHÁNH 2 NẾU KẾT NỐI THÀNH CÔNG --> 2.LẤY DỮ LIỆU TỪ BẢNG CONFIG DỰA TRÊN ID
+			// MUỐN LẤY VÀ CÓ STATUS ='TR'
+			// TRẢ VỀ MỘT RESULTSET --> 4.1 LƯU LIỆU VÀO MỘT CONFIG
 			MyConfig myConfig = getValuesFromConfig(connect_control, id_config);
-			
+
 			if (myConfig == null) {
 				System.out.println("There is no data to load");
-			}else {
+			} else {
 
 				// 5. MỞ KẾT NỐI DATABASE Staging VÀ DATABASE DataWarehouse
 				Connection connect_staging = GetConnection.getConnection("staging");
 				Connection connect_warehouse = GetConnection.getConnection("datawarehouse");
-				
 
-				// NẾU KẾT NỐI KHÔNG THÀNH CÔNG --> 6. ĐÓNG KẾT NỐI
+				// NHÁNH 1: NẾU KẾT NỐI KHÔNG THÀNH CÔNG --> 6. ĐÓNG KẾT NỐI
 				if (connect_staging == null || connect_warehouse == null) {
 					try {
 						connect_staging.close();
@@ -64,65 +64,65 @@ public class DataWarehouse {
 								"Không thể kết nối tới database Staging hoặc datawarehouse");
 						// IN RA CONSOLE
 						System.out.println("[ERROR] CONNECT DATAWAREHOUSE AND STAGING FAILED");
-						
+
 					} catch (SQLException e) {
 						e.printStackTrace();
 					}
 
 				} else {
+					// NHÁNH 2: KẾT NỐI THÀNH CÔNG
+
 					// KIỂM TRA ĐÃ TỒN TẠI TABLE CHƯA?
 					// NHÁNH 1: CHƯA TỒN TẠI DỮ LIỆU
 					if (checkTableExist(connect_warehouse, myConfig.getDatawarehouse_table(), "datawarehouse") == 0) {
+
 						// 7. BẮT ĐẦU TẠO BẢNG
 						if (createTable(myConfig, connect_warehouse)) {
+
 							// 8. LẤY DỮ LIỆU ---> 9. INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
 							tranferDataToDatawarehouse(connect_staging, connect_warehouse, myConfig);
-							truncateTable(connect_staging, myConfig);
 						}
 
 					}
 					// NHÁNH 2: ĐÃ TỒN TẠI BẢNG HOẶC DỮ LIỆU TỪ TRƯỚC
 					else {
-						// 8. KIỂM TRA TỪNG PK TRONG TABLE CÓ TỒN TẠI KHÔNG --> CHƯA TỒN TẠI THÌ THÊM
-						// ROW MỚI VÀO
+
+						// TIẾN HÀNH UPDATE DỮ LIỆU
 						updateData(connect_staging, connect_warehouse, myConfig);
-						truncateTable(connect_staging, myConfig);
 					}
 				}
-				
+				// 13.ĐÓNG TẤT CẢ CÁC KÊT NỐI DATABASE
+				try {
+				if (connect_control != null) {
+						connect_control.close();
+				}
+				if (connect_staging != null) {
+					connect_staging.close();
+				}
+				if (connect_warehouse != null) {
+					connect_warehouse.close();
+				}
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 			}
 
-
-
-				// *7
-
 		}
 
 	}
 
-	private void truncateTable(Connection connection, MyConfig myConfig) {
-		PreparedStatement statementTruncate;
-		try {
-			statementTruncate = connection.prepareStatement("TRUNCATE TABLE " + myConfig.getStaging_table());
-			statementTruncate.execute();
 
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		System.out.println("TRUNCATED " + myConfig.getStaging_table());
-	}
 
 	private MyConfig getValuesFromConfig(Connection connection, int id) {
-		
-		
-		// Câu sql để lấy dữ liệu từ config
+
+		// CÂU SQL LẤY DỮ LIỆU TỪ CONFIG
 		String sql = "SELECT log.id,log.id_config, conf.staging_table, conf.field_name,"
 				+ "conf.number_cols,conf.datawarehouse_table,conf.cols_date, conf.field_name_dwh,"
 				+ "conf.number_cols_dwh \r\n" + "FROM config conf join logs log on conf.id = log.id_config\r\n"
 				+ "WHERE   log.status = 'TR' AND log.id_config=" + id + ";";
-		
+
 		MyConfig myConfig = null;
 		PreparedStatement statement = null;
 		ResultSet resultSet = null;
@@ -132,10 +132,10 @@ public class DataWarehouse {
 			// 3. TRẢ VỀ MỘT resultSet
 			resultSet = statement.executeQuery();
 
-			if(resultSet.next()) {
+			if (resultSet.next()) {
 				myConfig = new MyConfig();
-				
-				//4.1 LƯU DỮ LIỆU VÀO MyConfig
+
+				// 4.1 LƯU DỮ LIỆU VÀO MyConfig
 				myConfig.setId(resultSet.getInt("id_config"));
 				myConfig.setStaging_table(resultSet.getString("staging_table"));
 				myConfig.setVariabless(resultSet.getString("conf.field_name"));
@@ -159,7 +159,6 @@ public class DataWarehouse {
 					resultSet.close();
 				}
 
-
 			} catch (SQLException e) {
 				System.out.println("Khong the tao bang");
 			}
@@ -168,46 +167,38 @@ public class DataWarehouse {
 		return myConfig;
 	}
 
-
-	
-
 	private void tranferDataToDatawarehouse(Connection connec_Stag, Connection connect_warehouse, MyConfig config) {
-		int cols = config.getNumber_cols_dwh();//-- Số lượng cột trong datawarehouse 
-		
-		
-		
-		
-		String field_dwh[] = config.getField_name_dwh().split(",");//-- Lấy ra tên cột trong dwh
-		boolean isDate_Dim = false; // -- Kiểm tra xem bảng insert có datedim không
-		
-		
-		// TẠO CÂU SQL LẤY DỮ LIỆU TỪ CÁC FIELD CẦN LẤY TỪ STAGING 
+		int cols = config.getNumber_cols_dwh();// -- Số lượng cột trong datawarehouse
+
+		String field_dwh[] = config.getField_name_dwh().split(",");
+		boolean isDate_Dim = false; // -- Kiểm tra xem bảng insert có cần tìm sk_date_dim không
+
+		// TẠO CÂU SQL LẤY DỮ LIỆU TỪ STAGING
 		String sqlSelectStaging = "SELECT ";
 		for (int i = 0; i < field_dwh.length; i++) {
-			
-			if(field_dwh[i].equalsIgnoreCase("sk_date_dim"))  {
-				cols =cols -1;
+
+			if (field_dwh[i].equalsIgnoreCase("sk_date_dim")) {
+				cols = cols - 1;
 				isDate_Dim = true;
 				continue;
-			} else if(i == field_dwh.length - 1) {
+			} else if (i == field_dwh.length - 1) {
 				sqlSelectStaging += field_dwh[i];
-			}else {
-				if(field_dwh[i+1].equalsIgnoreCase("sk_date_dim")&&(i+1)==field_dwh.length-1) {
+			} else {
+				if (field_dwh[i + 1].equalsIgnoreCase("sk_date_dim") && (i + 1) == field_dwh.length - 1) {
 					sqlSelectStaging += field_dwh[i];
-				}else {
+				} else {
 					sqlSelectStaging += field_dwh[i] + ",";
 				}
-				
+
 			}
 
 		}
 		sqlSelectStaging += " FROM " + config.getStaging_table();
-		//** KẾT THÚC VIỆC TẠO CÂU SQL LẤY DỮ LIỆU
+		// ** KẾT THÚC VIỆC TẠO CÂU SQL LẤY DỮ LIỆU
 
 		PreparedStatement statement = null;
 		ResultSet resultStaging = null;
-		
-		
+
 		PreparedStatement statementWareHouse = null;
 		ResultSet resultWareHouse = null;
 
@@ -216,78 +207,80 @@ public class DataWarehouse {
 			statement = connec_Stag.prepareStatement(sqlSelectStaging);
 			resultStaging = statement.executeQuery();
 			ResultSetMetaData resMetaData = (ResultSetMetaData) resultStaging.getMetaData();
-			
-			
-			
+
+			// 9 .XỬ LÍ DỮ LIỆU TRƯỚC KHI INSERT
 			while (resultStaging.next()) {
-				String date ="";//format date từ staging
-				int sk_date_dim=-1;// sk_date_dim mặc định = -1;
-				//Tạo câu sql insert
+				String date = "";// format date từ staging
+				int sk_date_dim = -1;// sk_date_dim mặc định = -1;
+				// Tạo câu sql insert
 				String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 				for (int i = 1; i <= cols; i++) {
-					
-					//KIỂM TRA NẾU KHÓA CHÍNH KHÔNG CÓ THÌ BỎ QUA KHÔNG CHO DỮ LIỆU TRANSFER
+
+					// KIỂM TRA NẾU KHÓA CHÍNH KHÔNG CÓ THÌ BỎ QUA KHÔNG CHO DỮ LIỆU TRANSFER
 					if (resultStaging.getString(1) == null) {
 						continue;
-						
-					} 
-					//KIỂM TRA NẾU LÀ CỘT CHỨA KIỂU DỮ LIỆU DATE THÌ FORMAT VÀ LẤY ID DATEDIM ĐỂ INSERT
+
+					}
+					// KIỂM TRA NẾU LÀ CỘT CHỨA KIỂU DỮ LIỆU DATE THÌ FORMAT VÀ LẤY ID DATEDIM ĐỂ
+					// INSERT
 					else if (resMetaData.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
-						
-						//FORMAT DỮ LIỆU DATE
+
+						// FORMAT DỮ LIỆU DATE
 						date = formatDate(resultStaging.getString(i));
 						// TÌM RA sk_date_dim TỪ TABLE DATEDIM
 						sk_date_dim = getIdDateDim(date, connect_warehouse);
-						
+
 						if (i == cols) {
 							sqlInsert += "'" + date + "');";
 						} else {
 							sqlInsert += "'" + date + "',";
 						}
-						
+
 					}
-					// NẾU LÀ CÁC CỘT BÌNH THƯỜNG THÌ TIẾP TỤC TAO CÂU INSERT SQL
+					// NẾU LÀ CÁC CỘT BÌNH THƯỜNG THÌ TIẾP TỤC TẠO CÂU INSERT SQL
 					else if (i == 1) {
 						sqlInsert += "" + resultStaging.getString(i) + ",";
 					} else if (i == cols) {
-						
-						//INSERT sk_date_dim 
-						if(isDate_Dim) {
+
+						// INSERT sk_date_dim
+						if (isDate_Dim) {
 							sqlInsert += "'" + resultStaging.getString(i) + "',";
 							sqlInsert += "" + sk_date_dim + ");";
-						}else {
+						} else {
 							sqlInsert += "'" + resultStaging.getString(i) + "');";
 						}
-						
+
 					} else {
 						sqlInsert += "'" + resultStaging.getString(i) + "',";
 					}
 
 				}
-				
-				
-				
+
 				statementWareHouse = connect_warehouse.prepareStatement(sqlInsert);
-//				9. INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
+
+//				10. INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
 				statementWareHouse.executeUpdate();
 				System.out.println("Successfully insert the row(s)");
 
 			}
-			//IN RA CONSOLE
-			System.out.println("DATA TRANSFER FROM Staging TABLE " + config.getStaging_table() + " TO datawarehouse SUCCESSFUL."
-					+ config.getDatawarehouse_table() + "\n\n");
-			// 10. GỬI MAIL THÔNG BÁO INSERT THÀNH CÔNG
-			sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE", "Transform data thành công từ Staging table."
+			// IN RA CONSOLE
+			System.out.println("DATA TRANSFER FROM Staging TABLE " + config.getStaging_table()
+					+ " TO datawarehouse SUCCESSFUL." + config.getDatawarehouse_table() + "\n\n");
+
+			// 11. GỬI MAIL THÔNG BÁO INSERT THÀNH CÔNG
+			sendMail.sendMail("[SUCCESS] DATA TRANSFER TO DATAWAREHOUSE", "Transform data thành công từ Staging table."
 					+ config.getStaging_table() + " sang datawarehouse." + config.getDatawarehouse_table() + "\n\n");
-			// 11. CẬP NHẬT STATUS='SUCCESS'
+
+			// 12. CẬP NHẬT LOGS STATUS='SUCCESS'
 			insertLog(config, "SUCCESS", 0);
 
 		} catch (SQLException e) {
 
-			// THÔNG BÁO LỖI
-			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE",
+			// 11. GỬI MAIL THÔNG BÁO LỖI
+			sendMail.sendMail("[ERROR] DATA TRANSFER TO DATAWAREHOUSE",
 					config.getDatawarehouse_table() + " KHÔNG THÊ INSERT DỮ LIỆU");
-			// GHI LOGS LỖI
+
+			// 12.CẬP NHẬT LOGS STATUS='ERROR_TRANSFER'
 			insertLog(config, "ERROR_TRANSFER", 0);
 			e.printStackTrace();
 		} finally {
@@ -346,12 +339,11 @@ public class DataWarehouse {
 	}
 
 	public static boolean createTable(MyConfig config, Connection connectionStaging) {
-		
+
 		boolean isCreated = false; // true: Tạo thành công , false: Tạo bảng thất bại
 		PreparedStatement statement = null;
 		ResultSet res = null;
-		
-		
+
 		// LẤY TÊN CỘT TỪ CONFIG
 		String[] fields = config.getField_name_dwh().split(",");
 
@@ -363,34 +355,31 @@ public class DataWarehouse {
 			// TẠO KHÓA CHÍNH CHO BẢNG
 			if (i == 0) {
 				sql += fields[i] + " INT PRIMARY KEY,";
-			} 
+			}
 			// NẾU LÀ CỘT DỮ LIỆU CUỐI THÌ THÊM ')'
 			else if (i == fields.length - 1) {
-				
-				if(fields[i].equalsIgnoreCase(config.getCols_date())) {
+
+				if (fields[i].equalsIgnoreCase(config.getCols_date())) {
 					sql += fields[i] + " date);";
 				}
-				//NẾU CÓ CỘT sk_date_dim TẠO VỚI KIỂU DỮ LIỆU LÀ INT
-				else
-				if(fields[i].equalsIgnoreCase("sk_date_dim")) {
+				// NẾU CÓ CỘT sk_date_dim TẠO VỚI KIỂU DỮ LIỆU LÀ INT
+				else if (fields[i].equalsIgnoreCase("sk_date_dim")) {
 					sql += fields[i] + " int);";
-				}else 
+				} else
 				// TẠO TẤT CẢ CÁC CỘT CÒN LẠI KIỂU DỮ LIỆU LÀ VARCHAR
 				{
 					sql += fields[i] + " varchar(225));";
 				}
-				
 
 			} else {
-				if(fields[i].equalsIgnoreCase(config.getCols_date())) {
+				if (fields[i].equalsIgnoreCase(config.getCols_date())) {
 					sql += fields[i] + " date,";
-				}else
-				if(fields[i].equalsIgnoreCase("sk_date_dim")) {
+				} else if (fields[i].equalsIgnoreCase("sk_date_dim")) {
 					sql += fields[i] + " int,";
-				}else {
+				} else {
 					sql += fields[i] + " varchar(255),";
 				}
-				
+
 			}
 		}
 
@@ -467,16 +456,15 @@ public class DataWarehouse {
 		return result;
 
 	}
-	public int getIdDateDim(String date,Connection connec_DatWare) {
-		String sql = "Select Date_SK\r\n" + 
-				"from date_dim d\r\n" + 
-				"where d.full_date = '"+date+"';";
+
+	public int getIdDateDim(String date, Connection connec_DatWare) {
+		String sql = "Select Date_SK\r\n" + "from date_dim d\r\n" + "where d.full_date = '" + date + "';";
 		int date_SK = -1;
 		try {
 			PreparedStatement statement = connec_DatWare.prepareStatement(sql);
 			ResultSet res = statement.executeQuery();
-			while(res.next()) {
-				date_SK =res.getInt(1);
+			while (res.next()) {
+				date_SK = res.getInt(1);
 			}
 			return date_SK;
 		} catch (SQLException e) {
@@ -484,36 +472,35 @@ public class DataWarehouse {
 		}
 		return date_SK;
 	}
+
 	private void updateData(Connection connect_staging, Connection connect_warehouse, MyConfig config) {
 		int cols = config.getNumber_cols_dwh();
 
-		String primaryKeySta = "";// 
+		String primaryKeySta = "";//
 		int rows_update_datawarehouse = 0;// ĐẾM SỐ HÀNG ĐƯỢC CẬP NHẬT
-		
-		
-		// TẠO CÂU SQL LẤY DỮ LIỆU TỪ CÁC FIELD CẦN LẤY TỪ STAGING ĐỂ SO SÁNH
+
+		// TẠO CÂU SQL LẤY DỮ LIỆU TỪNG DÒNG TỪ STAGING ĐỂ SO SÁNH
 		String sqlSelectStaging = "SELECT ";
 		String field_dwh[] = config.getField_name_dwh().split(",");
 		boolean isDate_Dim = false;
-		
+
 		for (int i = 0; i < field_dwh.length; i++) {
-			if(field_dwh[i].equalsIgnoreCase("sk_date_dim"))  {
-				cols =cols -1;
+			if (field_dwh[i].equalsIgnoreCase("sk_date_dim")) {
+				cols = cols - 1;
 				isDate_Dim = true;
 				continue;
-			} else if(i == field_dwh.length - 1) {
+			} else if (i == field_dwh.length - 1) {
 				sqlSelectStaging += field_dwh[i];
-			}else {
-				if(field_dwh[i+1].equalsIgnoreCase("sk_date_dim")&&(i+1)==field_dwh.length-1) {
+			} else {
+				if (field_dwh[i + 1].equalsIgnoreCase("sk_date_dim") && (i + 1) == field_dwh.length - 1) {
 					sqlSelectStaging += field_dwh[i];
-				}else {
+				} else {
 					sqlSelectStaging += field_dwh[i] + ",";
 				}
-				
+
 			}
 
 		}
-		
 
 		sqlSelectStaging += " FROM " + config.getStaging_table();
 
@@ -527,11 +514,12 @@ public class DataWarehouse {
 			statement = connect_staging.prepareStatement(sqlSelectStaging);
 			result = statement.executeQuery();
 			while (result.next()) {
-				//KIỂM TRA KHÓA CHÍNH NÀY DÃ TỒN TẠI TRONG BẢNG DATAWAREHOUSE
+				// 7.KIỂM TRA KHÓA CHÍNH NÀY DÃ TỒN TẠI TRONG BẢNG DATAWAREHOUSE
 				String sqlCheckExist = "SELECT COUNT(*)\r\n FROM " + config.getDatawarehouse_table() + "\r\t WHERE "
 						+ field_dwh[0] + "='";
 				ResultSetMetaData rsMeta = (ResultSetMetaData) result.getMetaData();
 				primaryKeySta = result.getString(1);
+				
 				if (primaryKeySta == null || primaryKeySta.equals("")) {
 					continue;
 				}
@@ -542,34 +530,36 @@ public class DataWarehouse {
 				resultWareHouse = statementWareHouse.executeQuery();
 
 				while (resultWareHouse.next()) {
-					// 8. KIỂM TRA TỪNG PK
-					// RESULT TRẢ VỀ 1 NẾU TỒN TẠI NGƯỢC LẠI TRẢ VỀ 0
-					//NHÁNH 1:SK TỒN TẠI RỒI
+
+					// KIỂM TRA TỪNG PK( RESULT TRẢ VỀ 1 NẾU TỒN TẠI NGƯỢC LẠI TRẢ VỀ 0)
+					// NHÁNH 1: PK ĐÃ TỒN TẠI RỒI
 					if (resultWareHouse.getInt(1) == 1) {
-						// NẾU ĐÃ TỒN TẠI, KIỂM TRA TỪNG DÒNG CÓ SỰ THAY ĐỔI GÌ KHÔNG
+						// 8.LẤY DỮ LIỆU CỦA TỪNG DÒNG BÊN BẢNG DATAWAREHOUSE
 						String sqlGet = "Select * from " + config.getDatawarehouse_table() + " where " + field_dwh[0]
 								+ " = '" + primaryKeySta + "';";
 
 						PreparedStatement statementGet = connect_warehouse.prepareStatement(sqlGet);
 						ResultSet resutlSetGet = statementGet.executeQuery();
 						ResultSetMetaData reMeta = (ResultSetMetaData) resutlSetGet.getMetaData();
+						
+						//9.XỬ LÍ DỮ LIỆU
 						while (resutlSetGet.next()) {
 
 							for (int i = 2; i <= cols; i++) {
-								
 								// SO SÁNH DỮ LIỆU DATE
 								if (reMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
-									//FORMAT DATE TỪ STAGING
+									// FORMAT DATE TỪ STAGING
 									String date = formatDate(result.getString(i));
-									
-									//NẾU KHÁC NHAU TIẾN HÀNH THÌ THAY THẾ VÀ TÌM LẠI sk_date_dim
+
+									// 10. NẾU DỮ LIỆU DATE KHÁC NHAU THÌ TIẾN HÀNH THAY THẾ VÀ TÌM LẠI sk_date_dim
 									if (!date.equalsIgnoreCase(resutlSetGet.getDate(i).toString())) {
 										String sqlUpadte = "";
 										int sk_date_dim = getIdDateDim(date, connect_warehouse);
 
 										sqlUpadte = "Update " + config.getDatawarehouse_table() + " SET "
-												+ reMeta.getColumnName(i) + "='" + formatDate(result.getString(i))+"',sk_date_dim="+sk_date_dim
-												+ " WHERE " + reMeta.getColumnName(1) + "=" + result.getInt(1) + "";
+												+ reMeta.getColumnName(i) + "='" + formatDate(result.getString(i))
+												+ "',sk_date_dim=" + sk_date_dim + " WHERE " + reMeta.getColumnName(1)
+												+ "=" + result.getInt(1) + "";
 
 										System.out.println(sqlUpadte);
 										PreparedStatement statementUpdate = connect_warehouse
@@ -578,16 +568,13 @@ public class DataWarehouse {
 
 										System.out.println(result.getString(i) + " ----> " + resutlSetGet.getString(i));
 									}
-								} 
-								//SO SÁNH DỮ LIỆU BÌNH THƯỜNG (VARCHAR)
+								}
+								// SO SÁNH DỮ LIỆU BÌNH THƯỜNG (VARCHAR)
 								// ĐIỀU KIỆN CẢ HAI PHẢI ĐỀU KHÁC NULL
 								else if (result.getString(i) != null && resutlSetGet.getString(i) != null) {
-									//
-
-//									if (result.getString(i) == null || resutlSetGet.getString(i) == null) {
-//										System.out.println(result.getString(i) + " ----> " + resutlSetGet.getString(i));
-//									} else
-										if (!result.getString(i).equalsIgnoreCase(resutlSetGet.getString(i))) {
+									
+									//  10. NẾU DỮ LIỆU KHÁC NHAU TIẾN HÀNH THÌ THAY THẾ 
+									if (!result.getString(i).equalsIgnoreCase(resutlSetGet.getString(i))) {
 										String sqlUpadte = "";
 
 										sqlUpadte = "Update " + config.getDatawarehouse_table() + " SET "
@@ -607,21 +594,20 @@ public class DataWarehouse {
 
 						}
 
-					} 
-					//NHÁNH 2: SK CHƯA TỒN
+					}
+					// NHÁNH 2: SK CHƯA TỒN
 					else {
-						//INSERT DỮ LIỆU MƠÍ VÀO
+						// INSERT DỮ LIỆU MƠÍ VÀO
 						System.out.println(rsMeta.getColumnName(1) + ": " + primaryKeySta
-								+ "PREPARING TO ADD NEW DATA TO THE TABLE" + 
-								"" + config.getDatawarehouse_table());
-					
+								+ " PREPARING TO ADD NEW DATA TO THE TABLE " + "" + config.getDatawarehouse_table());
+
 						String date = "";
-						int sk_date_dim =-1;
+						int sk_date_dim = -1;
 						String sqlInsert = "INSERT INTO " + config.getDatawarehouse_table() + " VALUES(";
 						for (int i = 1; i <= cols; i++) {
 							if (result.getString(1) == null) {
 								continue;
-								//KIỂM TRA NẾU LÀ CỘT DATE CẦN FORMAT LẠI VÀ LẤY ID DATEDIM
+								// KIỂM TRA NẾU LÀ CỘT DATE CẦN FORMAT LẠI VÀ LẤY ID DATEDIM
 							} else if (rsMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
 								date = formatDate(result.getString(i));
 								sk_date_dim = getIdDateDim(date, connect_warehouse);
@@ -631,55 +617,53 @@ public class DataWarehouse {
 									sqlInsert += "'" + date + "',";
 
 								}
-								//INSERT SK_date_dim VÀO BẢNG
+								// INSERT SK_date_dim VÀO BẢNG
 							} else if (i == 1) {
 								sqlInsert += "" + result.getString(i) + ",";
 							} else if (i == cols) {
-								if(isDate_Dim) {
+								if (isDate_Dim) {
 									sqlInsert += "'" + result.getString(i) + "',";
 									sqlInsert += "" + sk_date_dim + ");";
-								}else {
+								} else {
 									sqlInsert += "'" + result.getString(i) + "');";
 								}
-								
+
 							} else {
 								sqlInsert += "'" + result.getString(i) + "',";
 							}
 
 						}
-						
+
 						statementWareHouse = connect_warehouse.prepareStatement(sqlInsert);
 //						 INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
 						statementWareHouse.executeUpdate();
 						rows_update_datawarehouse++;
 						System.out.println("Successfully insert the row(s)");
 					}
-					
-					
+
 				}
 
 			}
-			//GHI LOG NẾU CÓ ROW UPDATE
+			// GHI LOG NẾU CÓ ROW UPDATE
 			if (rows_update_datawarehouse > 0) {
+				//IN RA CONSOLE SỐ ROW DẪ UPDATE 
 				System.out.println(config.getDatawarehouse_table() + " \r\n" + "updated row "
 						+ rows_update_datawarehouse + " ROW" + "\n\n");
-				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
+				// 11.GỬI MAIL THÔNG BÁO THÀNH CÔNG
 				sendMail.sendMail("[SUCCESS] UPDATE DATA DATAWAREHOUSE",
 						config.getDatawarehouse_table() + " update " + rows_update_datawarehouse + " rows");
-				// 11.GHI VÀO LOGS
+				// 12.GHI VÀO LOGS
 				insertLog(config, "SUCCESS", rows_update_datawarehouse);
 
 			} else {
-				// 10.GỬI MAIL THÔNG BÁO THÀNH CÔNG
+				// 11.GỬI MAIL THÔNG BÁO THÀNH CÔNG
 				sendMail.sendMail("[SUCCESS] TRANSFORM DATAWAREHOUSE",
 						config.getDatawarehouse_table() + " KHÔNG CÓ THAY ĐỔI " + "\n\n");
-				// 11.GHI VÀO LOGS
+				// 12.GHI VÀO LOGS
 				insertLog(config, "SUCCESS", rows_update_datawarehouse);
 			}
 
 		} catch (SQLException e) {
-			// THÔNG BÁO LỖI
-//			sendMail.sendMail("[ERROR] TRANSFORM DATAWAREHOUSE", config.getDatawarehouse_table()+" KHÔNG THÊ INSERT DỮ LIỆU");
 			e.printStackTrace();
 		} finally {
 			// 4.2 ĐÓNG KẾT NỐI DATABASE control_data
@@ -704,9 +688,8 @@ public class DataWarehouse {
 		}
 	}
 
-
 	public static void main(String[] args) {
-		DataWarehouse dataWarehouse = new DataWarehouse(1);
+		DataWarehouse dataWarehouse = new DataWarehouse(3);
 		dataWarehouse.start();
 	}
 
