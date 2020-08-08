@@ -12,9 +12,6 @@ import model.Download;
 import staging.LocalToStaging;
 
 public class MainClass extends Thread {
-
-	
-	
 	public static void main(String[] args) {
 			LocalToStaging staging = null;
 			DataWarehouse dataWareHouse = null;
@@ -30,7 +27,6 @@ public class MainClass extends Thread {
 				System.out.println("Ban nhap khong dung roi !");
 				
 			}
-			
 			while(true) {
 				
 				switch (process) {
