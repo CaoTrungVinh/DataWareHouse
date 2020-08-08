@@ -26,7 +26,7 @@ public class Run {
 		case 1:
 			// Download
 			System.out.println("\t\t\t DOWNLOAD");
-			try {
+			try {//
 				dow = new Download(1);
 				dow.download(1);
 			} catch (SQLException e) {

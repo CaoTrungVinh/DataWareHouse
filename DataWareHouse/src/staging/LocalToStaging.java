@@ -111,14 +111,8 @@ public class LocalToStaging {
 								dp.getCdb().updateLog(status, file_name);
 								System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
 								// ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
-								try {
-									TimeUnit.SECONDS.sleep(3);
-								} catch (InterruptedException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
 								DataWarehouse dataWarehouse = new DataWarehouse(id_config);
-								dataWarehouse.run();
+								dataWarehouse.start();
 
 							} else {
 								// Nếu mà bị lỗi thì update log là state=Not TR 

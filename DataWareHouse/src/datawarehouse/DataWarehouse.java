@@ -23,7 +23,7 @@ public class DataWarehouse {
 	}
 
 	// HÀM RUN
-	public void run() {
+	public void start() {
 		// 1. MỞ KẾT NỐI DATABASE Control_Data
 		Connection connect_control = GetConnection.getConnection("control");
 
@@ -77,7 +77,7 @@ public class DataWarehouse {
 						if (createTable(myConfig, connect_warehouse)) {
 							// 8. LẤY DỮ LIỆU ---> 9. INSERT DỮ LIỆU TỪ STAGING QUA DATAWAREHOUSE
 							tranferDataToDatawarehouse(connect_staging, connect_warehouse, myConfig);
-
+							truncateTable(connect_staging, myConfig);
 						}
 
 					}
@@ -86,7 +86,7 @@ public class DataWarehouse {
 						// 8. KIỂM TRA TỪNG PK TRONG TABLE CÓ TỒN TẠI KHÔNG --> CHƯA TỒN TẠI THÌ THÊM
 						// ROW MỚI VÀO
 						updateData(connect_staging, connect_warehouse, myConfig);
-
+						truncateTable(connect_staging, myConfig);
 					}
 				}
 				
@@ -100,19 +100,19 @@ public class DataWarehouse {
 
 	}
 
-//	private void truncateTable(Connection connection, MyConfig myConfig) {
-//		PreparedStatement statementTruncate;
-//		try {
-//			statementTruncate = connection.prepareStatement("TRUNCATE TABLE " + myConfig.getStaging_table());
-//			statementTruncate.execute();
-//
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//		System.out.println("TRUNCATED " + myConfig.getStaging_table());
-//	}
+	private void truncateTable(Connection connection, MyConfig myConfig) {
+		PreparedStatement statementTruncate;
+		try {
+			statementTruncate = connection.prepareStatement("TRUNCATE TABLE " + myConfig.getStaging_table());
+			statementTruncate.execute();
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println("TRUNCATED " + myConfig.getStaging_table());
+	}
 
 	private MyConfig getValuesFromConfig(Connection connection, int id) {
 		
@@ -707,7 +707,7 @@ public class DataWarehouse {
 
 	public static void main(String[] args) {
 		DataWarehouse dataWarehouse = new DataWarehouse(1);
-		dataWarehouse.run();
+		dataWarehouse.start();
 	}
 
 }
