@@ -21,7 +21,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import connections.GetConnection;
 import mail.SendMailSSL;
 
 public class Download {
@@ -48,26 +47,25 @@ public class Download {
 	long millis = System.currentTimeMillis();
 	java.sql.Date date = new java.sql.Date(millis);
 
-	public Download(String url,int i) throws SQLException {
+//	public Download(String url,int i) throws SQLException {
+	public Download(int i) throws SQLException {
 		this.url = url;
-		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
+//		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
 		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
 		this.id_config = 0;
 		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
 		this.mail = new SendMailSSL();
-		loadProps(i);
+		loadConfig(i);
 	}
 
-	private void loadProps(int i) throws SQLException {
-		// assign db parameters
-//		this.login_endpoint = "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&session=FileStation&format=cookies";
-
+	// 1. kết nối với config
+	private void loadConfig(int i) throws SQLException {
 		Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
 		System.out.println("ok");
 		ResultSet rs;
 		Statement stmt = connectionDB1.createStatement();
+		//Kết nối theo dòng id = i
 		rs = stmt.executeQuery("SELECT * FROM config where id=" + i);
-
 		System.out.println(username + " " + password);
 
 		while (rs.next()) {
@@ -82,7 +80,6 @@ public class Download {
 		}
 		System.out.println(url + " " + username + " " + password + " " + listFile + " " + folder_download + " "
 				+ kieuFile + " " + fileName);
-
 	}
 
 	public String getFolderPath() {
@@ -113,34 +110,31 @@ public class Download {
 		return mail;
 	}
 
+	// 2. Sử dụng SYNO.API.Auth kết nối Server
 	private void login() throws Exception {
-		// url
-		noticeLogin.append("\nBạn vùa mới đăng nhật vào hệ thống web :" + new Date() + " \n");
+		noticeLogin.append("\nBạn vùa mới đăng nhập vào hệ thống web :" + new Date() + " \n");
 		System.out.println("-------------------Infor Connection -------------------");
-//		login_endpoint += "&account=" + username + "&passwd=" + password;
-//		URL urlForGetRequest = new URL(url + login_endpoint);
 
-		URL urlForGetRequest = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
+		URL urlAPI = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
 				+ username + "&passwd=" + password + "&session=FileStation&format=cookie");
-		HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
-		conection.setRequestMethod("GET");
+		//Kết nối vào web qua url
+		HttpURLConnection conection = (HttpURLConnection) urlAPI.openConnection();
+		conection.setRequestMethod("GET");//get lấy thông tin connection
 		int responseCode = conection.getResponseCode();
 		System.out.println(responseCode);
 		System.out.println(HttpURLConnection.HTTP_OK);
-		if (responseCode == HttpURLConnection.HTTP_OK) {
-
+		if (responseCode == HttpURLConnection.HTTP_OK) {//kết nối thành công 
+			//Đọc connec
 			BufferedReader in = new BufferedReader(new InputStreamReader(conection.getInputStream()));
-
-			// Có thể thay đổi dữ liệu
 			StringBuffer response = new StringBuffer();
 			String line = null;
 			while ((line = in.readLine()) != null) {
 				response.append(line);
 			}
-			in.close();
+			in.close();//Buffêred đọc connec thành công đóng
 			JSONParser parser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) parser.parse(response.toString());
-			this.sid = (String) ((JSONObject) jsonObject.get("data")).get("sid");
+			this.sid = (String) ((JSONObject) jsonObject.get("data")).get("sid");//trả về 1 cookie nhận biết đăng nhập thành công
 			// print result
 			System.out.println("SID: " + sid);
 			System.out.println("status success: " + jsonObject.get("success"));
@@ -149,41 +143,43 @@ public class Download {
 			noticeLogin.append("\nSID: " + sid);
 			noticeLogin.append("\nLogin Successfull ! \n------------------------------------------------------");
 		} else {
-			System.out
-					.println("Login Faild please check again ! \n---------------------------------------------------");
-			noticeLogin
-					.append("Login Faild please check again ! \n---------------------------------------------------");
-		}
+			System.out.println(
+					"Đăng nhập thất bại vui lòng kiểm tra lại ! \n---------------------------------------------------");
+			noticeLogin.append(
+					"Đăng nhập thất bại vui lòng kiểm tra lại ! \n---------------------------------------------------");
+		} // 3. Thông báo ra màn hình đăng nhập thất bại vui lòng kiểm tra lại
 	}
-
+	
+	// 4. Lấy danh sách các file trên NAS 
 	public LinkedList<String> listFiles() throws Exception {
 		LinkedList<String> result = new LinkedList<String>();
 		if (sid != null) {
-
 			URL urlForGetRequest = new URL(url + "/webapi/entry.cgi?api=SYNO.FileStation.List&version=1&method=list"
 					+ "&folder_path=" + listFile + "&_sid=" + sid);
+			//Kết nối vào web qua url lấy danh sách file
 			HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
-			conection.setRequestMethod("GET");
+			conection.setRequestMethod("GET");//Lấy thông tin trang web để connection
 			int responseCode = conection.getResponseCode();
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				BufferedReader in = new BufferedReader(new InputStreamReader(conection.getInputStream()));
-
-				// Có thể thay đổi dữ liệu
+					
 				StringBuffer response = new StringBuffer();
 				String line = null;
 				while ((line = in.readLine()) != null) {
 					response.append(line);
 				}
-				in.close();
+				in.close();//Đọc thông tin dữ liệu trên fiêl thành công 
 
 				JSONParser parser = new JSONParser();
 				JSONObject jsonObject = (JSONObject) parser.parse(response.toString());
 
 				JSONArray files = (JSONArray) ((JSONObject) jsonObject.get("data")).get("files");
+				//Trả về tất cả các data có trong NAS
 				for (int i = 0; i < files.size(); i++) {
 					result.push((String) ((JSONObject) files.get(i)).get("name"));
 				}
 			} else {
+				//5. Thông báo không thể truy cập thể lấy danh sách các file
 				System.out.println("Không thể truy cập được vào hệ thống");
 
 			}
@@ -192,61 +188,18 @@ public class Download {
 		return result;
 	}
 
-	public String downloadFile() throws Exception {
-		if (sid != null) {
-			String src = listFile + "/" + fileName;
-			URL urlForGetRequest = new URL(
-					url + "/webapi/entry.cgi?api=SYNO.FileStation.Download&version=1&method=download&mode=open"
-							+ "&path=" + src + "&_sid=" + sid);
-			HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
-			conection.setRequestMethod("GET");
-			int responseCode = conection.getResponseCode();
-			if (responseCode == HttpURLConnection.HTTP_OK) {
-				InputStream in = new BufferedInputStream((conection.getInputStream()));
-				String line = null;
-				String fileDes = folder_download + src.substring(src.lastIndexOf("/") + 1);
-				System.out.println(fileDes);
-//				PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(fileDes)));
-				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileDes));
-				int numReadedBytes;
-				byte[] buff = new byte[1024];
-				while ((numReadedBytes = in.read(buff)) > -1) {
-					out.write(buff, 0, numReadedBytes);
-				}
-				in.close();
-				out.close();
-				System.out.println("down file thanh cong");
-				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
-				System.out.println("");
-
-				String query = "INSERT INTO logs(time_download, status, id_config) VALUES(?,?,?)";
-				PreparedStatement pre = connectionDB1.prepareStatement(query);
-
-				pre.setDate(1, date);
-				pre.setString(2, "OK");
-				pre.setInt(3, id_config);
-				pre.execute();
-				System.out.println("OKE");
-				return fileDes;
-			} else {
-				return null;
-			}
-		}
-		System.out.println("null");
-		return null;
-	}
-
-	public void download() throws Exception {
+	public void download(int idConfig) throws Exception {
 		LinkedList<String> lisFile = listFiles();
 		for (int i = 0; i < lisFile.size(); i++) {
 			String srcNameFile = lisFile.get(i);
 			String nameFile = srcNameFile.substring(srcNameFile.lastIndexOf("/") + 1);
+			//6. Kiểu tra những trong list File trùng với định dạng file trong config như loại file (sinh viên, môn học, đăng ký) và đuôi file 
 			if (nameFile.contains(fileName) && nameFile.contains(kieuFile)) {
 				System.out.println(nameFile);
-//				System.out.println(kieuFile);
 				URL urlForGetRequest = new URL(
 						url + "webapi/entry.cgi?api=SYNO.FileStation.Download&version=1&method=download&mode=open"
 								+ "&path=" + listFile + "/" + srcNameFile + "&_sid=" + sid);
+				//8. Kết nối vào urlAPI để download các file về local
 				HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
 				conection.setRequestMethod("GET");
 				int responseCode = conection.getResponseCode();
@@ -257,131 +210,60 @@ public class Download {
 					int readData;
 					byte[] buff = new byte[1024];
 					while ((readData = in.read(buff)) > -1) {
+						//9. các file download về local BufferedOutputStream out
 						out.write(buff, 0, readData);
 					}
 					in.close();
 					out.close();
 				}
 				System.out.println("down file thanh cong");
-				Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
-				System.out.println("");
-
-				String query = "INSERT INTO logs(file_name, status, time_download, id_config) VALUES(?,?,?,?)";
-				PreparedStatement pre = connectionDB1.prepareStatement(query);
-
-				pre.setString(1, nameFile);
-				pre.setString(2, "ER");
-				pre.setString(3, new Timestamp(System.currentTimeMillis()).toString().substring(0, 19));
-				pre.setInt(4, 1);
-
-				pre.setString(1, nameFile);
-				pre.execute();
-				System.out.println("OKE");
-
-//				String sql = "UPDATE logs SET\n status='" + "OKE" + "',time_download = current_timestamp(),file_name ='"
-//						+ nameFile + "' \n WHERE id=" + id_config;
-//				Connection connection = GetConnection.getConnection("control");
-//				PreparedStatement statement = connection.prepareStatement(sql);
-//				statement.executeUpdate();
+				// 10. Cập nhập logs
+				insertLog(nameFile, idConfig);
+				noticeDownLoad.append(
+						"Dowload thành công " + nameFile + " ! \n---------------------------------------------------");
+				//11. Thông báo về email
+				getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
 			}
 		}
+		// 7. Thông báo download thất bại
+		noticeDownLoad.append("Dowload thất bại ! \n---------------------------------------------------");
+		getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
 	}
 
-	public void downloadAllFile(LinkedList<String> listFile, String folderPathDownload) throws Exception {
+	public static void insertLog(String nameFile, int i) throws SQLException {
+		Connection connectionDB1 = DBConnections.getConnection(url_mysql, userName_mysql, passWord_mysql);
+		System.out.println("");
 
-		if (listFile.isEmpty()) {
-			noticeDownLoad.append("\nThere is no file to download, please check again ");
-			System.out.println("There is no file to download, please check again ");
-		} else {
-			noticeDownLoad.append("\nĐã DownLoad được các file : \n");
-			for (int i = 0; i < listFile.size(); i++) {
-				// Phải kiểm tra xem file đã tồn tại chưa nếu rồi thì không tải xuống nữa -- Nhớ
-				// làm sau !
-//				downloadFile(folderPathDownload + "/" + listFile.get(i));
-//				noticeDownLoad.append(listFile.get(i) + " \n");
+		String query = "INSERT INTO logs(file_name, status, time_download, id_config) VALUES(?,?,?,?)";
+		PreparedStatement pre = connectionDB1.prepareStatement(query);
 
-			}
-		}
+		pre.setString(1, nameFile);
+		pre.setString(2, "ER");
+		pre.setString(3, new Timestamp(System.currentTimeMillis()).toString().substring(0, 19));
+		pre.setInt(4, i);
+
+		pre.setString(1, nameFile);
+		pre.execute();
+		System.out.println("OKE");
+
 	}
 
-	public static void insertLog(MyConfig myConfig, String status, String nameFile) {
-		PreparedStatement statement = null;
-		int id_log = myConfig.getId_log();
-
-		String sql = "UPDATE logs SET\n status='" + "OKE" + "',time_download = current_timestamp(),file_name ="
-				+ nameFile + " \n WHERE id=" + id_log;
-		Connection connection = GetConnection.getConnection("control");
-		try {
-			statement = connection.prepareStatement(sql);
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			try {
-
-				if (statement != null) {
-					statement.close();
-				}
-				if (connection != null) {
-//					connection.close();
-				}
-
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public static void main(String[] args) throws Exception {
-		Download dw = new Download("http://drive.ecepvn.org:5000/",1);
-		}
-
-//	public static void insertLog(MyConfig myConfig, String status) {
-//		PreparedStatement statement = null;
-//		int id_log = myConfig.getId_log();
-//
-//		String sql = "UPDATE  logs SET time_download= current_timestamp(),status ='" + status + "' WHERE id = "
-//				+ id_log;
-//		Connection connection = GetConnection.getConnection("control");
-//		try {
-//			statement = connection.prepareStatement(sql);
-//			statement.executeUpdate();
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} finally {
-//			try {
-//
-//				if (statement != null) {
-//					statement.close();
-//				}
-//				if (connection != null) {
-//					connection.close();
-//				}
-//
-//			} catch (SQLException e) {
-//				System.out.println("Khong the tao bang");
-//				e.printStackTrace();
-//			}
-//		}
+//	public static void main(String[] args) throws Exception {
+//		Download dw = new Download(1);
 //	}
 
-
-
-	public void run() {
-		try {
-			login();
+//	public void run() {
+//		try {
+//			login();
 //			getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", noticeLogin.toString());
-
-			download();
-			downloadFile();
+//
+//			download();
 //			getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//	}
 
 }
