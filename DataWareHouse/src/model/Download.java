@@ -43,7 +43,7 @@ public class Download {
 
 	static String url_mysql = "jdbc:mysql://localhost/control?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 	static String userName_mysql = "root";
-	static String passWord_mysql = "";
+	static String passWord_mysql = "123456";
 
 	long millis = System.currentTimeMillis();
 	java.sql.Date date = new java.sql.Date(millis);
@@ -335,6 +335,7 @@ public class Download {
 
 	public static void main(String[] args) throws Exception {
 		Download dw = new Download("http://drive.ecepvn.org:5000/",1);
+		dw.run();
 		}
 
 //	public static void insertLog(MyConfig myConfig, String status) {
