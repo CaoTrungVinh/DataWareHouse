@@ -28,15 +28,16 @@ public class MainClass extends Thread {
 				
 			}
 			while(true) {
+				
 				switch (process) {
 				case 1:
 					//Dowload
-					try {
-						dow = new Download(1);
-					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
+//					try {
+//						dow = new Download("http://drive.ecepvn.org:5000/",1);
+//					} catch (SQLException e1) {
+//						// TODO Auto-generated catch block
+//						e1.printStackTrace();
+//					}
 					break;
 				case 2:
 					//Staging
