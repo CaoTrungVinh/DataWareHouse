@@ -41,7 +41,7 @@ public class DataWarehouse {
 		} else {
 			// NHÁNH 2 NẾU KẾT NỐI THÀNH CÔNG --> 2.LẤY DỮ LIỆU TỪ BẢNG CONFIG DỰA TRÊN ID
 			// MUỐN LẤY VÀ CÓ STATUS ='TR'
-			// TRẢ VỀ MỘT RESULTSET --> 4.1 LƯU LIỆU VÀO MỘT CONFIG
+			// 3.TRẢ VỀ MỘT RESULTSET --> 4 LƯU LIỆU VÀO MỘT CONFIG
 			MyConfig myConfig = getValuesFromConfig(connect_control, id_config);
 
 			if (myConfig == null) {
