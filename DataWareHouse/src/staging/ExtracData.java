@@ -120,18 +120,20 @@ public class ExtracData {
 							value += cell.getStringCellValue() + delim;
 							break;
 						default:
-							//
-							if(i<2) {
-								value += (long) cell.getNumericCellValue() + delim;
-							}else {
+							
 							value += " " + delim;
-							}
+							
 							break;
 						}
 						break;
 					case BLANK:
 					default:
+					//
+					if(i<2) {
+						value += (long) cell.getNumericCellValue() + delim;
+					}else {
 						value += " " + delim;
+					}
 						break;
 					}
 				}
