@@ -13,9 +13,6 @@ public class SendMailSSL {
 	
 	Properties props = null;
 	
-	
-	
-	
 	public SendMailSSL() {
 		// Get properties object
 		this.props = new Properties();
@@ -24,9 +21,6 @@ public class SendMailSSL {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.port", MailConfig.TSL_PORT);;
 	}
-
-
-
 
 	public void sendMail(String Tieude,String noiDung){
         // get Session
