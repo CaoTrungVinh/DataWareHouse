@@ -112,7 +112,7 @@ public class Download {
 		URL urlAPILogin = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
 				+ username + "&passwd=" + password + "&session=FileStation&format=cookie");
 		//Kết nối vào web qua url
-		HttpURLConnection conection = (HttpURLConnection) urlAPILogin.openConnection();
+		HttpURLConnection conection = (HttpURLConnection) urlAPILogin.openConnection();//openConnection() trả về tối tượng mà n kết nối. http
 		conection.setRequestMethod("GET");//get lấy thông tin connection
 		int responseCode = conection.getResponseCode();
 		System.out.println(responseCode);
