@@ -107,10 +107,10 @@ public class LocalToStaging {
 									staging_table + " update " + status + " TR");
 							// 15. update cái logs với status ="TR" và thời gian insert thành công
 							dp.getCdb().updateLog(status, file_name);
-//							System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
-//							// ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
-//							DataWarehouse dataWarehouse = new DataWarehouse(id_config);
-//							dataWarehouse.start();
+							System.out.println("\t \t .....PREPARING THE TRANSFORM PROCESS TO DATAWAREHOUSE.....");
+							// ĐẾN PHẦN TRANSFORM SANG DATAWAREHOUSE
+							DataWarehouse dataWarehouse = new DataWarehouse(id_config);
+							dataWarehouse.start();
 						} else {
 							status = "Not TR";
 							System.out.println("INSERT ERROR");
