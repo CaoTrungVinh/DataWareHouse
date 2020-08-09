@@ -209,4 +209,5 @@ public class MyConfig {
 				+ field_name + ", number_cols=" + number_cols + ", datawarehouse_table=" + datawarehouse_table
 				+ ", cols_date=" + cols_date + "]";
 	}
+	
 }
