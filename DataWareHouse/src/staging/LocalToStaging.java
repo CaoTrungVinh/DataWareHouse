@@ -36,19 +36,6 @@ public class LocalToStaging {
 		return status;
 	}
 
-	public void loadData() throws ClassNotFoundException, SQLException {
-		LocalToStaging dw = new LocalToStaging(1);
-		dw.setId_config(id_config);
-		dw.setStatus("ER");
-		ExtracData dp = new ExtracData();
-		DBControl cdb = new DBControl();
-		cdb.setStaging_dbname("staging");
-		cdb.setControl_dbname("control");
-		cdb.setTable_name("config");
-		dp.setCdb(cdb);
-		dw.ExtractToDB(dp);
-	}
-
 	public void ExtractToDB(ExtracData dp) throws ClassNotFoundException, SQLException {
 		// 1. Mở Kết nối với database control -----> 2.Lấy dữ liệu từ bảng config dựa trên điều kiện là id
 		// 3. Trả về một ResultSet thỏa điều kiện truy xuất -----> 4. Chạy từng record trong resultset và lưu dữ liệu vào config
@@ -132,6 +119,19 @@ public class LocalToStaging {
 			}
 
 		}
+	}
+	
+	public void loadData() throws ClassNotFoundException, SQLException {
+		LocalToStaging dw = new LocalToStaging(1);
+		dw.setId_config(id_config);
+		dw.setStatus("ER");
+		ExtracData dp = new ExtracData();
+		DBControl cdb = new DBControl();
+		cdb.setStaging_dbname("staging");
+		cdb.setControl_dbname("control");
+		cdb.setTable_name("config");
+		dp.setCdb(cdb);
+		dw.ExtractToDB(dp);
 	}
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
 		Scanner sc = new Scanner(System.in);
