@@ -56,12 +56,11 @@ public class DBControl {
 	public void setTable_name(String table_name) {
 		this.table_name = table_name;
 	}
-
 //phương thức lấy các thuộc tính của bảng config
-	public List<MyConfig> loadAllConfig(int condition) throws ClassNotFoundException, SQLException {
+	public MyConfig loadAllConfig(int condition) throws ClassNotFoundException, SQLException {
 		// 1. Mở kết với database Control
 		Connection con = GetConnection.getConnection("control");
-		List<MyConfig> listConfig = new ArrayList<MyConfig>();
+		MyConfig listConfig = null;
 		// 2.Lấy dữ liệu từ bảng conig có id thỏa điều kiện
 		String sql = "select * from config where id= ?";
 		PreparedStatement ps = con.prepareStatement(sql);
@@ -69,21 +68,20 @@ public class DBControl {
 		// 3. Nhận được ResultSet chứa các record thỏa điều kiện truy xuất
 		ResultSet rs = ps.executeQuery();
 		// 4. chạy từng record trong resultset
-		while (rs.next()) {
-			MyConfig config = new MyConfig();
+		if (rs.next()) {
+			listConfig = new MyConfig();
 			// Lấy dữ liệu lưu vào config
-			config.setId(rs.getInt("id"));
-			config.setFolder_download(rs.getString("folder_download"));
-			config.setFile_name(rs.getString("file_name"));
-			config.setDelimiter(rs.getString("delimiter"));
-			config.setStaging_table(rs.getString("staging_table"));
-			config.setField_name(rs.getString("field_name"));
-			listConfig.add(config);
+			listConfig.setId(rs.getInt("id"));
+			listConfig.setFolder_download(rs.getString("folder_download"));
+			listConfig.setFile_name(rs.getString("file_name"));
+			listConfig.setDelimiter(rs.getString("delimiter"));
+			listConfig.setStaging_table(rs.getString("staging_table"));
+			listConfig.setField_name(rs.getString("field_name"));
 		}
 		// đóng việc thực thi câu lệnh sql.
 		ps.close();
 		
-		// trả về một listConfig
+		// trả về một config
 		return listConfig;
 	}
 	// Phương thức lấy các thuộc tính config với status = ER và theo dòng config của nó
