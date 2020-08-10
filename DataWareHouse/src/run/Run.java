@@ -10,20 +10,18 @@ import staging.LocalToStaging;
 public class Run {
 	public static void main(String[] args) throws Exception {
 
-		System.out.println("SELECTION: 1 - sinh vien, 2 - mon hoc,3 - dang ky, 4- lop hoc\nNhap config de RUN: ");
-		Scanner sc = new Scanner(System.in);
 		LocalToStaging staging = null;
 		Download dow = null;
-		String line = sc.nextLine();
-		int selection = 0;
-		try {
-			selection = Integer.parseInt(line);
-		} catch (Exception e) {
-			System.out.println("Ban nhap khong dung roi !");
-		}
+		int selection =3 ;
+//		try {
+//			selection = Integer.parseInt(line);
+//		} catch (Exception e) {
+//			System.out.println("Ban nhap khong dung roi !");
+//		}
 
 		switch (selection) {
 		case 1:
+			System.out.println("\t\t\tDATA SINH VIEN");
 			// Download
 			System.out.println("\t\t\t DOWNLOAD");
 			try {//
@@ -36,7 +34,7 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(1);
 			try {
-				staging.run();
+				staging.loadData();
 			} catch (ClassNotFoundException | SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -44,6 +42,7 @@ public class Run {
 
 			break;
 		case 2:
+			System.out.println("\t\t\tDATA MON HOC");
 			// Download
 			System.out.println("\t\t\t DOWNLOAD");
 			try {
@@ -56,14 +55,15 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(2);
 			try {
-				staging.run();
-			} catch (ClassNotFoundException | SQLException e) {
+				staging.loadData();
+				} catch (ClassNotFoundException | SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 			break;
 		case 3:
+			System.out.println("\t\t\tDATA DANG KY");
 			// Download
 			System.out.println("\t\t\t DOWNLOAD");
 			try {
@@ -76,14 +76,15 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(3);
 			try {
-				staging.run();
-			} catch (ClassNotFoundException | SQLException e) {
+				staging.loadData();
+				} catch (ClassNotFoundException | SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 			break;
 		case 4:
+			System.out.println("\t\t\tDATA LOP HOC");
 			// Download
 			System.out.println("\t\t\t DOWNLOAD");
 			try {
@@ -96,8 +97,8 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(4);
 			try {
-				staging.run();
-			} catch (ClassNotFoundException | SQLException e) {
+				staging.loadData();
+				} catch (ClassNotFoundException | SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
