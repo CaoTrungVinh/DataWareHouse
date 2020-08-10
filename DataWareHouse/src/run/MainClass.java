@@ -39,6 +39,7 @@ public class MainClass extends Thread {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+<<<<<<< .mine
 			System.out.println("\t\t\t STAGING VS DATAWAREHOUSE");
 			// Staging
 			staging = new LocalToStaging(1);
@@ -48,6 +49,47 @@ public class MainClass extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=======
+			while(true) {
+				
+				switch (process) {
+				case 1:
+					break;
+				case 2:
+					//Staging
+					 staging = new LocalToStaging(selection);
+					
+					try {
+							staging.loadDatat();
+					} catch (ClassNotFoundException | SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				
+					break;
+				case 3:
+					//Dowload
+					//Staging
+					 dataWareHouse = new DataWarehouse(selection);
+					 dataWareHouse.start();
+						
+					break;
+>>>>>>> .theirs
 
 			break;
 		case 2:

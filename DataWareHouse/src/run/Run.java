@@ -57,8 +57,13 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(2);
 			try {
+<<<<<<< .mine
 				staging.loadData();
 				} catch (ClassNotFoundException | SQLException e) {
+=======
+				staging.loadData();
+			} catch (ClassNotFoundException | SQLException e) {
+>>>>>>> .theirs
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -79,8 +84,13 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(3);
 			try {
+<<<<<<< .mine
 				staging.loadData();
 				} catch (ClassNotFoundException | SQLException e) {
+=======
+				staging.loadData();
+			} catch (ClassNotFoundException | SQLException e) {
+>>>>>>> .theirs
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -101,8 +111,13 @@ public class Run {
 			// Staging
 			staging = new LocalToStaging(4);
 			try {
+<<<<<<< .mine
 				staging.loadData();
 				} catch (ClassNotFoundException | SQLException e) {
+=======
+				staging.loadData();
+			} catch (ClassNotFoundException | SQLException e) {
+>>>>>>> .theirs
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

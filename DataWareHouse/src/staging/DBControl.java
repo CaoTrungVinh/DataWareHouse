@@ -1,8 +1,6 @@
 package staging;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,8 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+<<<<<<< .mine
 import mail.SendMailSSL;
 
+=======
+
+
+>>>>>>> .theirs
 public class DBControl {
 	private String control_dbname;
 	private String staging_dbname;
@@ -22,6 +25,7 @@ public class DBControl {
 	private String sql;
 	SendMailSSL sendMail = null;
 
+
 	public DBControl(String db_name, String table_name, String staging_dbname) {
 		this.control_dbname = db_name;
 		this.table_name = table_name;
@@ -30,7 +34,11 @@ public class DBControl {
 	}
 
 	public DBControl() {
+<<<<<<< .mine
 		sendMail = new SendMailSSL();
+=======
+		
+>>>>>>> .theirs
 	}
 
 	public String getControl_dbname() {
@@ -113,7 +121,19 @@ public class DBControl {
 		// trả về listLog
 		return listLog;
 	}
+	public void truncateTable(Connection connection, String table_name) {
+		PreparedStatement statementTruncate;
+		try {
+			statementTruncate = connection.prepareStatement("TRUNCATE TABLE " + table_name);
+			statementTruncate.execute();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("TRUNCATED " + table_name);
+	}
 
+<<<<<<< .mine
 	public void truncateTable(Connection connection, String table_name) {
 		PreparedStatement statementTruncate;
 		try {
@@ -130,11 +150,34 @@ public class DBControl {
 
 	// Phương thức chèn giá trị vào bảng có trong db staging, giá trị có
 	// được từ quá trình đọc file (file .xlsx):
+=======
+	// Phương thức insert giá trị vào bảng có trong db staging
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> .theirs
 	public boolean insertValues(String field_name, String values, String staging_table) throws ClassNotFoundException {
 		StringTokenizer stoken = new StringTokenizer(values, "|");
 		while (stoken.hasMoreElements()) {
+<<<<<<< .mine
 			sql = "INSERT INTO " + staging_table + "(" + field_name + ") VALUES " + stoken.nextToken();
 			System.out.println("insert successfull " + staging_table);
+=======
+			sql = "INSERT INTO " + staging_table + "(" + field_name + ") VALUES " + stoken.nextToken();
+			System.out.println(staging_table);
+>>>>>>> .theirs
 			try {
 				pst = GetConnection.getConnection("staging").prepareStatement(sql);
 				pst.executeUpdate();
@@ -198,7 +241,11 @@ public class DBControl {
 		}
 		return 0;
 	}
+<<<<<<< .mine
 
+=======
+//Phương thức tạo bảng 
+>>>>>>> .theirs
 	public boolean createTable(String table_name, String field_name) {
 		System.out.println("create");
 		//Lấy các field_name từ config
