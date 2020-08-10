@@ -22,7 +22,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ExtracData {
 	static final String NUMBER_REGEX = "^[0-9]+$";
 	static final String DATE_FORMAT = "yyyy-MM-dd";
-	private DBControl cdb;// gọi class DBControl
+	private DBControl cdb;
 	private String control_dbname;
 	private String staging_dbname;
 	private String table_name;
@@ -60,19 +60,18 @@ public class ExtracData {
 	public void setTable_name(String table_name) {
 		this.table_name = table_name;
 	}
+
+	// Phương thức đọc những giá trị có trong file (value), cách nhau bởi dấu phân cách (delimeter).
 	private String readLines(String value, String delim) {
 		String values = "";
-		StringTokenizer stoken = new StringTokenizer(value, delim);//tạo ra một lớp StringTokenizer dựa trên chuỗi value và dấu phân cách.
-		int countToken = stoken.countTokens();//trả về tổng số lượng token
+		StringTokenizer stoken = new StringTokenizer(value, delim);
+		int countToken = stoken.countTokens();
 		String lines = "(";
-		// duyêt các token trong chuổi
 		for (int j = 0; j < countToken; j++) {
-			String token = stoken.nextToken();//Trả về token tiếp theo khi duyệt StringTokenizer.
+			String token = stoken.nextToken();
 			if (Pattern.matches(NUMBER_REGEX, token)) {
-				//nếu duyệt thấy token kế tiếp là số thì ko cần thêm dấu nháy đơn
 				lines += (j == countToken - 1) ? token.trim() + ")," : token.trim() + ",";
 			} else {
-				//nếu duyệt thấy token kế tiếp là chữ thì thêm dấu nháy đơn cho nó
 				lines += (j == countToken - 1) ? "'" + token.trim() + "')," : "'" + token.trim() + "',";
 			}
 			values += lines;
@@ -80,17 +79,63 @@ public class ExtracData {
 		}
 		return values;
 	}
+	// Phương thức đọ dữ liệu trong file .txt:
+	public String readValuesTXT(File s_file, int count_field) {
+		if (!s_file.exists()) {
+			return null;
+		}
+		String values = "";
+		String delim = "|"; // hoặc \t
+		try {
+			// Đọc một dòng dữ liệu có trong file:
+			BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(s_file), "utf8"));
+			String line = bReader.readLine();
+			if (line.indexOf("\t") != -1) {
+				delim = "\t";
+			}
+			// Kiểm tra xem tổng số field trong file có đúng format hay không
+			// (11 trường)
+//			if (new StringTokenizer(line, delim).countTokens() != count_field) {
+//				bReader.close();
+//				return null;
+//			}
+			// STT|Mã sinh viên|Họ lót|Tên|...-> line.split(delim)[0]="STT"
+			// không phải số nên là header -> bỏ qua line
+			// Kiểm tra xem có phần header hay không
+			if (Pattern.matches(NUMBER_REGEX, line.split(delim)[0])) {
+				values += readLines(line + delim, delim);
+			}
+			while ((line = bReader.readLine()) != null) {
+				// line = 1|17130005|Đào Thị Kim|Anh|15-08-1999|DH17DTB|Công
+				// nghệ thông tin
+				// b|0123456789|17130005st@hcmuaf.edu.vn|Bến Tre|abc
+				// line + " " + delim = 1|17130005|Đào Thị
+				// Kim|Anh|15-08-1999|DH17DTB|Công nghệ
+				// thông tin b|0123456789|17130005st@hcmuaf.edu.vn|Bến Tre|abc |
+				// Nếu có field 11 thì dư khoảng trắng lên readLines() có
+				// trim(), còn 10 field
+				// thì fix lỗi out index
+				values += readLines(line + " " + delim, delim);
+			}
+			bReader.close();
+			return values.substring(0, values.length() - 1);
+
+		} catch (NoSuchElementException | IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 		// Phương thức đọc dữ liệu trong file .xlsx:
 		public String readValuesXLSX(File s_file, int countField) {
 			String values = "";
 			String value = "";
 			String delim = "|";
 			try {
-				//
+				
 				FileInputStream fileIn = new FileInputStream(s_file);
-				XSSFWorkbook workBook = new XSSFWorkbook(fileIn);//các class xử lý với Excel Workbook
-				XSSFSheet sheet = workBook.getSheetAt(0);// các class xử lý với Excel Worksheet
-				Iterator<Row> rows = sheet.iterator();
+				XSSFWorkbook workBook = new XSSFWorkbook(fileIn);//khai báo file xlsx 
+				XSSFSheet sheet = workBook.getSheetAt(0);//
+				Iterator<Row> rows = sheet.iterator();//Lấy ra cái danh sách hàng
 				// Kiểm tra xem có phần header hay không, nếu không có phần header 
 				//Gọi rows.next, nếu có header thì vị trí dòng dữ liệu là 1. Nếu kiểm tra mà không có header thì phải set lại cái row bắt đầu ở vị trí 0
 				if (rows.next().cellIterator().next().getCellType().equals(CellType.NUMERIC)) {
@@ -103,14 +148,13 @@ public class ExtracData {
 					// staging không
 					// Bắt đầu lấy giá trị trong các ô ra:
 					for (int i = 0; i < countField; i++) {
-						Cell cell = row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-						CellType cellType = cell.getCellType();
+						Cell cell = row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);// tạo ô trông 
+						CellType cellType = cell.getCellType();// gán kiểu cho các ô trống
 						switch (cellType) {
 						case NUMERIC:
 							if (DateUtil.isCellDateFormatted(cell)) {
-								//cung cấp phương thức để định dạng và phân tích ngày tháng và thời gian
 								SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-								value += dateFormat.format(cell.getDateCellValue()) + delim;//dùng để chuyển đổi date thành string 
+								value += dateFormat.format(cell.getDateCellValue()) + delim;
 							} else {
 								value += (long) cell.getNumericCellValue() + delim;
 							}
@@ -145,6 +189,7 @@ public class ExtracData {
 				}
 				workBook.close();
 				fileIn.close();
+				
 				return values.substring(0, values.length() - 1);
 			} catch (Exception e) {
 				return null;
@@ -159,3 +204,4 @@ public class ExtracData {
 		}
 	
 }
+

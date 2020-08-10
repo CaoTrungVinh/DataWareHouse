@@ -14,6 +14,7 @@ import mail.SendMailSSL;
 import model.MyConfig;
 
 public class DataWarehouse {
+	
 	SendMailSSL sendMail = null;
 	int id_config = 0;
 
@@ -92,20 +93,20 @@ public class DataWarehouse {
 					}
 				}
 				// 13.ĐÓNG TẤT CẢ CÁC KÊT NỐI DATABASE
-//				try {
-//				if (connect_control != null) {
-//						connect_control.close();
-//				}
-//				if (connect_staging != null) {
-//					connect_staging.close();
-//				}
-//				if (connect_warehouse != null) {
-//					connect_warehouse.close();
-//				}
-//				} catch (SQLException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
+				try {
+				if (connect_control != null) {
+						connect_control.close();
+				}
+				if (connect_staging != null) {
+					connect_staging.close();
+				}
+				if (connect_warehouse != null) {
+					connect_warehouse.close();
+				}
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 			}
 

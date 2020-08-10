@@ -21,7 +21,11 @@ public class DateDim {
 				.collect(Collectors.toList());
 	}
 	public void mainMehtod(List<LocalDate> list) {
+		
+		//THAY ĐỔI CONNECT VÀO DATABASE LẠI NHÉ !!!
 		Connection conn = GetConnection.getConnection("datawarehouse");
+		//XONG RỒI THI RUN THÔI
+		
 		PreparedStatement pre = null;
 		try {
 			for (LocalDate l : list) {

@@ -31,7 +31,6 @@ public class Download {
 	private StringBuffer noticeDownLoad;
 	private SendMailSSL mail;
 
-	String login_endpoint;
 	String username;
 	String password;
 	static String listFile;
@@ -44,13 +43,8 @@ public class Download {
 	static String userName_mysql = "root";
 	static String passWord_mysql = "";
 
-	long millis = System.currentTimeMillis();
-	java.sql.Date date = new java.sql.Date(millis);
-
-//	public Download(String url,int i) throws SQLException {
 	public Download(int i) throws SQLException {
 		this.url = url;
-//		this.folderPath = "/ECEP/song.nguyen/DW_2020/data";
 		this.noticeLogin = new StringBuffer("[THÔNG BÁO] HỆ THỐNG TRUYỀN DỮ LIỆU");
 		this.id_config = 0;
 		this.noticeDownLoad = new StringBuffer("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE");
@@ -111,14 +105,14 @@ public class Download {
 	}
 
 	// 2. Sử dụng SYNO.API.Auth kết nối Server
-	private void login() throws Exception {
+	public void login() throws Exception {
 		noticeLogin.append("\nBạn vùa mới đăng nhập vào hệ thống web :" + new Date() + " \n");
 		System.out.println("-------------------Infor Connection -------------------");
 
-		URL urlAPI = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
+		URL urlAPILogin = new URL(url + "/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account="
 				+ username + "&passwd=" + password + "&session=FileStation&format=cookie");
 		//Kết nối vào web qua url
-		HttpURLConnection conection = (HttpURLConnection) urlAPI.openConnection();
+		HttpURLConnection conection = (HttpURLConnection) urlAPILogin.openConnection();//openConnection() trả về tối tượng mà n kết nối. http
 		conection.setRequestMethod("GET");//get lấy thông tin connection
 		int responseCode = conection.getResponseCode();
 		System.out.println(responseCode);
@@ -132,6 +126,8 @@ public class Download {
 				response.append(line);
 			}
 			in.close();//Buffêred đọc connec thành công đóng
+			
+			//thư viện json cho phép đọc và ghi dữ liệu 
 			JSONParser parser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) parser.parse(response.toString());
 			this.sid = (String) ((JSONObject) jsonObject.get("data")).get("sid");//trả về 1 cookie nhận biết đăng nhập thành công
@@ -154,12 +150,13 @@ public class Download {
 	public LinkedList<String> listFiles() throws Exception {
 		LinkedList<String> result = new LinkedList<String>();
 		if (sid != null) {
-			URL urlForGetRequest = new URL(url + "/webapi/entry.cgi?api=SYNO.FileStation.List&version=1&method=list"
+			URL urlAPIList = new URL(url + "/webapi/entry.cgi?api=SYNO.FileStation.List&version=1&method=list"
 					+ "&folder_path=" + listFile + "&_sid=" + sid);
 			//Kết nối vào web qua url lấy danh sách file
-			HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
+			HttpURLConnection conection = (HttpURLConnection) urlAPIList.openConnection();
 			conection.setRequestMethod("GET");//Lấy thông tin trang web để connection
 			int responseCode = conection.getResponseCode();
+			System.out.println("Danh sách file");
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				BufferedReader in = new BufferedReader(new InputStreamReader(conection.getInputStream()));
 					
@@ -188,7 +185,7 @@ public class Download {
 		return result;
 	}
 
-	public void download(int idConfig) throws Exception {
+	public void download() throws Exception {
 		LinkedList<String> lisFile = listFiles();
 		for (int i = 0; i < lisFile.size(); i++) {
 			String srcNameFile = lisFile.get(i);
@@ -196,11 +193,11 @@ public class Download {
 			//6. Kiểu tra những trong list File trùng với định dạng file trong config như loại file (sinh viên, môn học, đăng ký) và đuôi file 
 			if (nameFile.contains(fileName) && nameFile.contains(kieuFile)) {
 				System.out.println(nameFile);
-				URL urlForGetRequest = new URL(
+				URL urlAPIDown = new URL(
 						url + "webapi/entry.cgi?api=SYNO.FileStation.Download&version=1&method=download&mode=open"
 								+ "&path=" + listFile + "/" + srcNameFile + "&_sid=" + sid);
 				//8. Kết nối vào urlAPI để download các file về local
-				HttpURLConnection conection = (HttpURLConnection) urlForGetRequest.openConnection();
+				HttpURLConnection conection = (HttpURLConnection) urlAPIDown.openConnection();
 				conection.setRequestMethod("GET");
 				int responseCode = conection.getResponseCode();
 				if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -218,7 +215,7 @@ public class Download {
 				}
 				System.out.println("down file thanh cong");
 				// 10. Cập nhập logs
-				insertLog(nameFile, idConfig);
+				insertLog(nameFile, id_config);
 				noticeDownLoad.append(
 						"Dowload thành công " + nameFile + " ! \n---------------------------------------------------");
 				//11. Thông báo về email
@@ -248,22 +245,27 @@ public class Download {
 
 	}
 
-//	public static void main(String[] args) throws Exception {
-//		Download dw = new Download(1);
-//	}
+	public static void main(String[] args) throws Exception {
+		Download dw = new Download(4);
+		dw.login();
+		dw.listFiles();
+//		dw.download();
+//		dw.run(1);
+	}
 
-//	public void run() {
-//		try {
-//			login();
-//			getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", noticeLogin.toString());
-//
-//			download();
-//			getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//	}
+	public void run() {
+		try {
+			login();
+			getMail().sendMail("[THÔNG BÁO] ĐĂNG NHẬP VÀO WEB LẤY FILE", noticeLogin.toString());
+			
+			listFiles();
+			download();
+			getMail().sendMail("[THÔNG BÁO] HỆ THỐNG DOWNLOAD FILE", noticeDownLoad.toString());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 
 }

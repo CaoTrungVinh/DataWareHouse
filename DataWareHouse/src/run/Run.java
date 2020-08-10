@@ -12,7 +12,7 @@ public class Run {
 
 		LocalToStaging staging = null;
 		Download dow = null;
-		int selection =3 ;
+		int selection =4;
 //		try {
 //			selection = Integer.parseInt(line);
 //		} catch (Exception e) {
@@ -26,7 +26,8 @@ public class Run {
 			System.out.println("\t\t\t DOWNLOAD");
 			try {//
 				dow = new Download(1);
-				dow.download(1);
+				dow.login();
+				dow.download();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -47,7 +48,8 @@ public class Run {
 			System.out.println("\t\t\t DOWNLOAD");
 			try {
 				dow = new Download(2);
-				dow.download(2);
+				dow.login();
+				dow.download();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -68,7 +70,8 @@ public class Run {
 			System.out.println("\t\t\t DOWNLOAD");
 			try {
 				dow = new Download(3);
-				dow.download(3);
+				dow.login();
+				dow.download();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -89,7 +92,8 @@ public class Run {
 			System.out.println("\t\t\t DOWNLOAD");
 			try {
 				dow = new Download(4);
-				dow.download(4);
+				dow.login();
+				dow.download();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}

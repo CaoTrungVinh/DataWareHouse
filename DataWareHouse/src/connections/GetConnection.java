@@ -29,13 +29,13 @@ public class GetConnection {
 		} else if (location.equalsIgnoreCase("staging")) {
 			driver = "com.mysql.jdbc.Driver";
 			url = "jdbc:mysql://localhost:3306/";
-			databasebName = "staging";
+			databasebName = "staging?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 			user = "root";
 			pass = "";
 		} else if (location.equalsIgnoreCase("datawarehouse")) {
 			driver = "com.mysql.jdbc.Driver";
 			url = "jdbc:mysql://localhost:3306/";
-			databasebName = "datawarehouse";
+			databasebName = "datawarehouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=UTF-8";
 			user = "root";
 			pass = "";
 		} else {
@@ -57,6 +57,7 @@ public class GetConnection {
 			System.out.println("Khong thay file config");
 			System.exit(0);
 			e.printStackTrace();
+			return null;
 		}
 
 		return result;
