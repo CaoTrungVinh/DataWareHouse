@@ -65,7 +65,7 @@ public class DBControl {
 		String sql = "select * from config where id= ?";
 		PreparedStatement ps = con.prepareStatement(sql);
 		ps.setInt(1, condition);
-		// 3. Nhận được ResultSet chứa các record thỏa điều kiện truy xuất
+		// 3. Trả về ResultSet thỏa điều kiện truy xuất
 		ResultSet rs = ps.executeQuery();
 		// 4. chạy từng record trong resultset
 		if (rs.next()) {
@@ -96,7 +96,7 @@ public class DBControl {
 		PreparedStatement ps = conn.prepareStatement(selectLog);
 		ps.setString(1, condition);
 		ps.setInt(2, id_config);
-		// 9. Nhận được ResultSet chứa các record thỏa điều kiện truy xuất
+		// 9.  Trả về ResultSet thỏa điều kiện truy xuất
 		ResultSet rs = ps.executeQuery();// trả về một ResultSet khi thực hiện một câu lệnh select
 		// 10. chạy từng record trong resultset và lưu dữ liệu vào listLog
 		while (rs.next()) {
