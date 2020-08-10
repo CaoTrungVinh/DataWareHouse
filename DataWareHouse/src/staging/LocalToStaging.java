@@ -37,37 +37,15 @@ public class LocalToStaging {
 		return status;
 	}
 
-	public void loadData() throws ClassNotFoundException, SQLException {
-		LocalToStaging dw = new LocalToStaging(1);
-		dw.setId_config(id_config);
-		dw.setStatus("ER");
-		ExtracData dp = new ExtracData();
-		DBControl cdb = new DBControl();
-		cdb.setStaging_dbname("staging");
-		cdb.setControl_dbname("control");
-		cdb.setTable_name("config");
-		dp.setCdb(cdb);
-		dw.ExtractToDB(dp);
-	}
-
-	public static void main(String[] args) throws ClassNotFoundException, SQLException {
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Nhập id config cần load: ");
-		int id = sc.nextInt();
-		LocalToStaging dw = new LocalToStaging(id);
-		dw.loadData();
-	}
-
 	public void ExtractToDB(ExtracData dp) throws ClassNotFoundException, SQLException {
 		// 1. Mở Kết nối với database control -----> 2.Lấy dữ liệu từ bảng config dựa trên điều kiện ID
 		// 3. Trả về một ResultSet thỏa điều kiện truy xuất -----> 4. Chạy từng record trong resultset và lưu dữ liệu vào config
-		List<MyConfig> listConf = dp.getCdb().loadAllConfig(this.id_config);
+		MyConfig myConfig = dp.getCdb().loadAllConfig(this.id_config);
 		// Lấy các trường trong các dòng config ra:
-		for (MyConfig config : listConf) {
-			String staging_table = config.getStaging_table();
-			String folder_download = config.getFolder_download();
-			String delim = config.getDelimiter();
-			String field_name = config.getField_name();
+			String staging_table = myConfig.getStaging_table();
+			String folder_download = myConfig.getFolder_download();
+			String delim = myConfig.getDelimiter();
+			String field_name = myConfig.getField_name();
 			System.out.println(staging_table);// in ra tên table staging
 			System.out.println(folder_download);// in ra thư mục chứa file
 			// 5. Mở kết nối với database Staging
@@ -78,7 +56,7 @@ public class LocalToStaging {
 				// 6.1 gọi hàm tạo bảng nếu chưa tạo bảng
 				dp.getCdb().createTable(staging_table, field_name);
 			} else {
-				// 6.2 gọi hàm trumcatetable
+				// 6.2 gọi hàm trumcatetable dữ liệu cũ
 				dp.getCdb().truncateTable(connectionSta, staging_table);
 				// in ra thông báo nếu bảng đã tồn tại
 				System.out.println("Bảng " + staging_table + " đã tồn tại sãn sàng insert dữ liệu!!!!");
@@ -125,7 +103,7 @@ public class LocalToStaging {
 
 						} else {
 							status = "Not TR";
-							// 14. gửi mail thông báo lỗi với status ="TR" và thời gian insert không thành
+							// 14. gửi mail thông báo lỗi với status ="Not TR" và thời gian insert không thành
 							// công
 							sendMail.sendMail("[ERROR] INSERT DATA TO DATABASE STAGING",
 									staging_table + " update " + status + "Not TR");
@@ -142,7 +120,25 @@ public class LocalToStaging {
 					return;
 				}
 			}
+	}
+	public void loadData() throws ClassNotFoundException, SQLException {
+		LocalToStaging dw = new LocalToStaging(1);
+		dw.setId_config(id_config);
+		dw.setStatus("ER");
+		ExtracData dp = new ExtracData();
+		DBControl cdb = new DBControl();
+		cdb.setStaging_dbname("staging");
+		cdb.setControl_dbname("control");
+		cdb.setTable_name("config");
+		dp.setCdb(cdb);
+		dw.ExtractToDB(dp);
+	}
 
-		}
+	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Nhập id config cần load: ");
+		int id = sc.nextInt();
+		LocalToStaging dw = new LocalToStaging(id);
+		dw.loadData();
 	}
 }
