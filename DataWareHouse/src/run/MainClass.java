@@ -37,7 +37,7 @@ public class MainClass extends Thread {
 					 staging = new LocalToStaging(selection);
 					
 					try {
-							staging.run();
+							staging.loadDatat();
 					} catch (ClassNotFoundException | SQLException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
