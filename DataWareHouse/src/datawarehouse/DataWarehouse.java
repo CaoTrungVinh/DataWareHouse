@@ -223,8 +223,8 @@ public class DataWarehouse {
 					}
 					// KIỂM TRA NẾU LÀ CỘT CHỨA KIỂU DỮ LIỆU DATE THÌ FORMAT VÀ LẤY ID DATEDIM ĐỂ
 					// INSERT
+					
 					else if (resMetaData.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
-
 						// FORMAT DỮ LIỆU DATE
 						date = formatDate(resultStaging.getString(i));
 						// TÌM RA sk_date_dim TỪ TABLE DATEDIM
@@ -442,6 +442,37 @@ public class DataWarehouse {
 		}
 	}
 
+	// HÀM GHI LOGS
+		public static void insertLogERR(MyConfig myConfig, String status, int rows_update_err) {
+			PreparedStatement statement = null;
+			int id_log = myConfig.getId_log();
+
+			String sql = "UPDATE logs SET\n status='" + status
+					+ "',time_Datawarehouse=current_timestamp(),rows_update_err=" + rows_update_err
+					+ " \n WHERE id=" + id_log;
+			Connection connection = GetConnection.getConnection("control");
+			try {
+				statement = connection.prepareStatement(sql);
+				statement.executeUpdate();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				try {
+
+					if (statement != null) {
+						statement.close();
+					}
+					if (connection != null) {
+//						connection.close();
+					}
+
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
 	public String formatDate(String resDate) {
 		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
 		String result = "";
@@ -478,6 +509,7 @@ public class DataWarehouse {
 
 		String primaryKeySta = "";//
 		int rows_update_datawarehouse = 0;// ĐẾM SỐ HÀNG ĐƯỢC CẬP NHẬT
+		int rows_update_err=0;
 
 		// TẠO CÂU SQL LẤY DỮ LIỆU TỪNG DÒNG TỪ STAGING ĐỂ SO SÁNH
 		String sqlSelectStaging = "SELECT ";
@@ -549,7 +581,15 @@ public class DataWarehouse {
 								// SO SÁNH DỮ LIỆU DATE
 								if (reMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
 									// FORMAT DATE TỪ STAGING
-									String date = formatDate(result.getString(i));
+									String dateTemp = result.getString(config.getCols_date());
+									String date ="";
+									if(dateTemp.equals("")||dateTemp == null) {
+										date ="9999-01-01";
+									}else {
+										 date = formatDate(result.getString(config.getCols_date()));
+									}
+									
+									
 
 									// 10. NẾU DỮ LIỆU DATE KHÁC NHAU THÌ TIẾN HÀNH THAY THẾ VÀ TÌM LẠI sk_date_dim
 									if (!date.equalsIgnoreCase(resutlSetGet.getDate(i).toString())) {
@@ -557,7 +597,7 @@ public class DataWarehouse {
 										int sk_date_dim = getIdDateDim(date, connect_warehouse);
 
 										sqlUpadte = "Update " + config.getDatawarehouse_table() + " SET "
-												+ reMeta.getColumnName(i) + "='" + formatDate(result.getString(i))
+												+ reMeta.getColumnName(i) + "='" + date
 												+ "',sk_date_dim=" + sk_date_dim + " WHERE " + reMeta.getColumnName(1)
 												+ "=" + result.getInt(1) + "";
 
@@ -609,8 +649,16 @@ public class DataWarehouse {
 								continue;
 								// KIỂM TRA NẾU LÀ CỘT DATE CẦN FORMAT LẠI VÀ LẤY ID DATEDIM
 							} else if (rsMeta.getColumnName(i).equalsIgnoreCase(config.getCols_date())) {
-								date = formatDate(result.getString(i));
-								sk_date_dim = getIdDateDim(date, connect_warehouse);
+								System.out.println(rsMeta.getColumnName(i) +" và "+ config.getCols_date());
+								String dateTemp = result.getString(config.getCols_date());
+								if(dateTemp.equals("")||dateTemp==null) {
+									date = "9999-01-01";
+									sk_date_dim = -1;
+								}else{
+									date = formatDate(result.getString(config.getCols_date()));
+									sk_date_dim = getIdDateDim(date, connect_warehouse);
+								}
+								
 								if (i == cols) {
 									sqlInsert += "'" + date + "');";
 								} else {
@@ -664,7 +712,8 @@ public class DataWarehouse {
 			}
 
 		} catch (SQLException e) {
-			e.printStackTrace();
+			rows_update_err++;
+			insertLogERR(config, "SUCESS", rows_update_err);
 		} finally {
 			// 4.2 ĐÓNG KẾT NỐI DATABASE control_data
 			try {
@@ -689,7 +738,7 @@ public class DataWarehouse {
 	}
 
 	public static void main(String[] args) {
-		DataWarehouse dataWarehouse = new DataWarehouse(3);
+		DataWarehouse dataWarehouse = new DataWarehouse(1);
 		dataWarehouse.start();
 	}
 
