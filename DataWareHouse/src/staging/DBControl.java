@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import mail.SendMailSSL;
-
 public class DBControl {
 	private String control_dbname;
 	private String staging_dbname;
@@ -20,7 +18,6 @@ public class DBControl {
 	private PreparedStatement pst = null;
 	private ResultSet rs = null;
 	private String sql;
-	SendMailSSL sendMail = null;
 
 	public DBControl(String db_name, String table_name, String staging_dbname) {
 		this.control_dbname = db_name;
@@ -127,7 +124,7 @@ public class DBControl {
 	}
 
 	// Phương thức chèn giá trị vào bảng có trong db staging, giá trị có
-	// được từ quá trình đọc file (file .xlsx):
+	// được từ quá trình đọc file
 	public boolean insertValues(String field_name, String values, String staging_table) throws ClassNotFoundException {
 		StringTokenizer stoken = new StringTokenizer(values, "|");
 		while (stoken.hasMoreElements()) {
